@@ -33,12 +33,22 @@ def listar_transacoes():
     resultado = []
     for t in transacoes:
         resultado.append({
+<<<<<<< HEAD
             'id': t.id,
             'descricao': t.descricao,
             'valor': float(t.valor),
             'categoria': t.categoria.nome if t.categoria else None,
             'data': t.data.strftime('%Y-%m-%d')
         })
+=======
+    'id': t.id,
+    'descricao': t.descricao,
+    'valor': float(t.valor),
+    'tipo': t.tipo,
+    'categoria': t.categoria.nome if t.categoria else None,
+    'data': t.data.strftime('%Y-%m-%d')
+})
+>>>>>>> 39da51e (Correções e pequenas adições de melhorias na funcionalidade de perfil e histórico, além de ajustes no código para melhor organização e clareza.)
     return jsonify(resultado)
 
 @api.route('/transacoes', methods=['POST'])
@@ -243,6 +253,7 @@ def grafico_barras():
             extract('year', Transacao.data) == ano
         ).scalar() or 0
 
+<<<<<<< HEAD
         investimentos = db.session.query(db.func.sum(Transacao.valor)).filter(
             Transacao.usuario_id == request.usuario_id,
             Transacao.tipo == 'despesa',
@@ -265,6 +276,32 @@ def grafico_barras():
         gastos_lista.append(float(despesas))
         investimentos_lista.append(float(investimentos))
         apostas_lista.append(float(apostas))
+=======
+        investimentos = db.session.query(db.func.sum(Transacao.valor))\
+    .join(Categoria, Transacao.categoria_id == Categoria.id)\
+    .filter(
+        Transacao.usuario_id == request.usuario_id,
+        Transacao.tipo == 'despesa',
+        Categoria.nome == 'Investimentos/Reservas',
+        extract('month', Transacao.data) == mes,
+        extract('year', Transacao.data) == ano
+    ).scalar() or 0
+
+    apostas = db.session.query(db.func.sum(Transacao.valor))\
+    .join(Categoria, Transacao.categoria_id == Categoria.id)\
+    .filter(
+        Transacao.usuario_id == request.usuario_id,
+        Transacao.tipo == 'despesa',
+        Categoria.nome == 'Apostas',
+        extract('month', Transacao.data) == mes,
+        extract('year', Transacao.data) == ano
+    ).scalar() or 0
+
+    receitas_lista.append(float(receitas))
+    gastos_lista.append(float(despesas))
+    investimentos_lista.append(float(investimentos))
+    apostas_lista.append(float(apostas))
+>>>>>>> 39da51e (Correções e pequenas adições de melhorias na funcionalidade de perfil e histórico, além de ajustes no código para melhor organização e clareza.)
 
     return jsonify({
         'labels': labels,

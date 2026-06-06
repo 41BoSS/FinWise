@@ -12,11 +12,15 @@ def create_app():
     
     db.init_app(app)
     
+<<<<<<< HEAD
     CORS(app,
          origins=["http://localhost:8000", "http://127.0.0.1:8000"],
          methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
          allow_headers=["Content-Type", "Authorization"],
          supports_credentials=True)
+=======
+    CORS(app)
+>>>>>>> 39da51e (Correções e pequenas adições de melhorias na funcionalidade de perfil e histórico, além de ajustes no código para melhor organização e clareza.)
     
     app.register_blueprint(api, url_prefix='/api')
     app.register_blueprint(auth_bp, url_prefix='/auth')

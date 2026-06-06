@@ -175,6 +175,53 @@ footer {
     gap: 0.25rem;
   }
 }
+<<<<<<< HEAD
+=======
+.sidebar nav ul li {
+    width: 100%;
+}
+
+.sidebar nav ul li a {
+    display: flex !important;
+    align-items: center;
+    gap: 12px;
+
+    width: 100% !important;
+    height: 100%;
+
+    padding: 14px 20px;
+
+    text-decoration: none !important;
+    color: #475569 !important;
+
+    border-radius: 12px;
+
+    cursor: pointer;
+
+    box-sizing: border-box;
+}
+.sidebar nav ul li a span {
+    color: inherit !important;
+    text-decoration: none !important;
+}
+
+.sidebar nav ul li a:visited {
+    color: #475569 !important;
+}
+
+.sidebar nav ul li a:hover {
+    background-color: #E8F5EE;
+    color: #1F9D74 !important;
+}
+
+.sidebar nav ul li.active a {
+    background: #1F9D74;
+    color: white !important;
+}
+.sidebar nav ul li a i {
+    font-size: 18px;
+}
+>>>>>>> 39da51e (Correções e pequenas adições de melhorias na funcionalidade de perfil e histórico, além de ajustes no código para melhor organização e clareza.)
 
 @media (max-width: 480px) {
   body {
