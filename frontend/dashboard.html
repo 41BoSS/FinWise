@@ -32,28 +32,45 @@
     .sidebar nav ul {
       list-style: none;
     }
-    .sidebar nav ul li {
-      padding: 12px 15px;
-      margin: 5px 0;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.2s;
-      color: #333;
-    }
-    .sidebar nav ul li i {
-      margin-right: 10px;
-      color: #279975;
-    }
-    .sidebar nav ul li:hover {
-      background: #e8f5e9;
-    }
-    .sidebar nav ul li.active {
-      background: #279975;
-      color: white;
-    }
-    .sidebar nav ul li.active i {
-      color: white;
-    }
+.sidebar nav ul li {
+  padding: 0;
+  margin: 4px 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.sidebar nav ul li a {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 12px 15px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #555;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+}
+.sidebar nav ul li a i {
+  margin-right: 10px;
+  color: #888;
+  width: 18px;
+  text-align: center;
+  transition: color 0.2s;
+}
+.sidebar nav ul li a:hover {
+  background: #e8f5e9;
+  color: #279975;
+}
+.sidebar nav ul li a:hover i {
+  color: #279975;
+}
+.sidebar nav ul li.active a {
+  background: #279975;
+  color: #ffffff;
+}
+.sidebar nav ul li.active a i {
+  color: #ffffff;
+}
     .main-content {
       flex: 1;
       padding: 20px;
@@ -384,12 +401,12 @@
       border-color: #279975;
       color: #279975;
     }
-    .categoria-btn.selected {
-      background: #e8f5e9;
-      border-color: #279975;
-      color: #279975;
-      font-weight: 600;
-    }
+.categoria-btn.selected {
+    background: #279975;
+    border-color: #279975;
+    color: #ffffff;
+    font-weight: 600;
+}
     .recorrente-toggle {
       display: flex;
       align-items: center;
@@ -468,7 +485,216 @@
     .btn-salvar:hover {
       background: #1e7a5e;
     }
+/* ===== HISTÓRICO ===== */
 
+.historico-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.historico-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.historico-header h1 {
+  font-size: 28px;
+  color: #333;
+}
+
+.btn-nova-transacao {
+  background: #279975;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 18px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-nova-transacao:hover {
+  background: #1f7d61;
+}
+
+.historico-filtros {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.filtro-grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filtro-grupo label {
+  font-size: 14px;
+  color: #666;
+}
+
+.filtro-grupo input {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.historico-categorias {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.historico-categoria-btn {
+  border: none;
+  background: #e8f5e9;
+  color: #279975;
+  padding: 8px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.historico-categoria-btn.active {
+  background: #279975;
+  color: white;
+}
+
+.historico-lista {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+}
+
+.historico-dia {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 15px;
+}
+
+.historico-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.historico-titulo {
+  font-weight: 600;
+  color: #333;
+}
+
+.historico-categoria {
+  font-size: 13px;
+  color: #888;
+  margin-top: 4px;
+}
+
+.historico-valor {
+  font-weight: bold;
+}
+
+.historico-valor.receita {
+  color: #279975;
+}
+
+.historico-valor.despesa {
+  color: #e74c3c;
+}
+/* ===== PERFIL ===== */
+
+.perfil-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding-top: 20px;
+}
+
+.perfil-card {
+  background: white;
+  width: 100%;
+  max-width: 500px;
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.perfil-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: #279975;
+
+  color: white;
+  font-size: 32px;
+  font-weight: bold;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.perfil-nome {
+  color: #333;
+  font-size: 24px;
+}
+
+.perfil-info {
+  width: 100%;
+}
+
+.perfil-campo {
+  margin-bottom: 15px;
+}
+
+.perfil-campo label {
+  display: block;
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 5px;
+}
+
+.perfil-campo p {
+  font-size: 16px;
+  color: #333;
+}
+
+.btn-editar-perfil,
+.btn-alterar-senha,
+.btn-sair {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-editar-perfil {
+  background: #279975;
+  color: white;
+}
+
+.btn-alterar-senha {
+  background: #f1c40f;
+  color: #333;
+}
+
+.btn-sair {
+  background: #e74c3c;
+  color: white;
+}
     @media (max-width: 768px) {
       .sidebar {
         width: 60px;
@@ -496,16 +722,44 @@
     <h2>FinWise</h2>
     <div style="font-size: 12px; color: #999;">Finanças inteligentes</div>
     <nav>
-      <ul>
-        <li class="active"><i class="fas fa-home"></i> <span>Início</span></li>
-        <li><i class="fas fa-history"></i> <span>Histórico</span></li>
-        <li><i class="fas fa-calendar-alt"></i> <span>Agenda</span></li>
-        <li><i class="fas fa-bell"></i> <span>Alertas</span></li>
-        <li><i class="fas fa-user"></i> <span>Perfil</span></li>
-      </ul>
-    </nav>
+  <ul>
+    <li class="active">
+      <a href="#" data-view="inicio">
+        <i class="fas fa-home"></i> <span>Início</span>
+      </a>
+    </li>
+
+    <li>
+      <a href="#" data-view="historico">
+        <i class="fas fa-history"></i> <span>Histórico</span>
+      </a>
+    </li>
+
+    <li>
+      <a href="#" data-view="agenda">
+        <i class="fas fa-calendar-alt"></i> <span>Agenda</span>
+      </a>
+    </li>
+
+    <li>
+      <a href="#" data-view="alertas">
+        <i class="fas fa-bell"></i> <span>Alertas</span>
+      </a>
+    </li>
+
+    <li>
+      <a href="#" data-view="perfil">
+
+        <i class="fas fa-user"></i> <span>Perfil</span>
+      </a>
+    </li>
+  </ul>
+</nav>
   </div>
   <div class="main-content">
+
+    <section id="view-inicio">
+
     <header>
       <div class="greeting">
         <h1>Olá, <span id="user-name">[nome]</span></h1>
@@ -565,6 +819,96 @@
       </table>
     </div>
     <button class="fab">+</button>
+
+</section>
+
+<section id="view-historico" style="display:none;">
+  <div class="historico-container">
+
+    <div class="historico-header">
+      <h1>Histórico</h1>
+      <button class="btn-nova-transacao">+ Nova Transação</button>
+    </div>
+
+    <div class="historico-filtros">
+      <div class="filtro-grupo">
+        <label>Data início</label>
+        <input type="date" id="filtro-data-inicio">
+      </div>
+      <div class="filtro-grupo">
+        <label>Data fim</label>
+        <input type="date" id="filtro-data-fim">
+      </div>
+    </div>
+
+    <div class="historico-categorias">
+      <button class="historico-categoria-btn active" data-categoria="todos">Todos</button>
+      <button class="historico-categoria-btn" data-categoria="Despesas Fixas">Despesas Fixas</button>
+      <button class="historico-categoria-btn" data-categoria="Despesas Variáveis">Despesas Variáveis</button>
+      <button class="historico-categoria-btn" data-categoria="Transporte">Transporte</button>
+      <button class="historico-categoria-btn" data-categoria="Investimentos/Reservas">Investimentos/Reservas</button>
+      <button class="historico-categoria-btn" data-categoria="Apostas">Apostas</button>
+      <button class="historico-categoria-btn" data-categoria="Salário">Salário</button>
+      <button class="historico-categoria-btn" data-categoria="Freelance/Bico">Freelance/Bico</button>
+      <button class="historico-categoria-btn" data-categoria="Outro">Outro</button>
+    </div>
+
+    <div class="historico-lista" id="historico-lista"></div>
+
+  </div>
+</section>
+
+<section id="view-agenda" style="display:none;">
+</section>
+
+<section id="view-perfil" style="display:none;">
+
+<div class="perfil-container">
+
+    <h1>Perfil</h1>
+
+    <div class="perfil-card">
+
+      <div class="perfil-avatar">
+        LC
+      </div>
+
+      <h2 class="perfil-nome">
+        lc202321742
+      </h2>
+
+      <div class="perfil-info">
+
+        <div class="perfil-campo">
+          <label>E-mail</label>
+          <p>lc202321742@gmail.com</p>
+        </div>
+
+        <div class="perfil-campo">
+          <label>Telefone</label>
+          <p>(11) 98765-4321</p>
+        </div>
+
+      </div>
+
+      <button class="btn-editar-perfil">
+        Editar perfil
+      </button>
+
+      <button class="btn-alterar-senha">
+        Alterar senha
+      </button>
+
+      <button class="btn-sair">
+        Sair
+      </button>
+
+    </div>
+
+  </div>
+
+</section>
+
   </div>
 
   <!-- MODAL NOVA TRANSAÇÃO -->
@@ -607,6 +951,21 @@
           <button class="categoria-btn" data-categoria="Apostas">Apostas</button>
           <button class="categoria-btn" data-categoria="Outros">Outros</button>
         </div>
+        <div class="form-group">
+    <label class="form-label">Subcategoria</label>
+
+    <select class="form-select" id="select-subcategoria">
+        <option value="">Selecione...</option>
+    </select>
+</div>
+
+<div class="form-group">
+    <input
+        type="text"
+        class="form-input"
+        id="input-subcategoria-personalizada"
+        placeholder="Ou digite uma subcategoria personalizada">
+</div>
 
         <!-- Descrição -->
         <div class="form-group">
@@ -616,7 +975,7 @@
 
         <!-- Despesa Recorrente -->
         <div class="recorrente-toggle">
-          <span>É uma despesa recorrente?</span>
+          <span>É uma transação recorrente?</span>
           <label class="switch">
             <input type="checkbox" id="toggle-recorrente">
             <span class="slider"></span>
@@ -628,10 +987,24 @@
           <div class="form-group">
             <label class="form-label">Frequência</label>
             <select class="form-select" id="select-frequencia">
-              <option value="Mensal">Mensal</option>
-              <option value="Semanal">Semanal</option>
-              <option value="Anual">Anual</option>
-            </select>
+
+    <option value="Mensal">
+        Mensal
+    </option>
+
+    <option value="Quinzenal">
+        Quinzenal
+    </option>
+
+    <option value="Semanal">
+        Semanal
+    </option>
+
+    <option value="Anual">
+        Anual
+    </option>
+
+</select>
           </div>
           <div class="form-group">
             <label class="form-label">Data de vencimento</label>

@@ -33,12 +33,15 @@ def listar_transacoes():
     resultado = []
     for t in transacoes:
         resultado.append({
-            'id': t.id,
-            'descricao': t.descricao,
-            'valor': float(t.valor),
-            'categoria': t.categoria.nome if t.categoria else None,
-            'data': t.data.strftime('%Y-%m-%d')
-        })
+    'id': t.id,
+    'descricao': t.descricao,
+    'valor': float(t.valor),
+    'categoria': t.categoria.nome if t.categoria else None,
+    'subcategoria': t.subcategoria,
+    'recorrente': t.recorrente,
+    'frequencia': t.frequencia,
+    'data': t.data.strftime('%Y-%m-%d')
+})
     return jsonify(resultado)
 
 @api.route('/transacoes', methods=['POST'])
@@ -50,6 +53,10 @@ def criar_transacao():
     categoria_nome = dados.get('categoria')
     tipo = dados.get('tipo')
     data_str = dados.get('data')
+
+    subcategoria = dados.get('subcategoria')
+    recorrente = dados.get('recorrente', False)
+    frequencia = dados.get('frequencia')
 
     if not all([descricao, valor, categoria_nome, tipo]):
         return jsonify({'erro': 'Campos obrigatorios ausentes'}), 400
@@ -66,13 +73,17 @@ def criar_transacao():
         data_transacao = date.today()
 
     transacao = Transacao(
-        descricao=descricao,
-        valor=float(valor),
-        tipo=tipo,
-        categoria_id=categoria.id,
-        usuario_id=request.usuario_id,
-        data=data_transacao
-    )
+    descricao=descricao,
+    valor=float(valor),
+    tipo=tipo,
+    categoria_id=categoria.id,
+    usuario_id=request.usuario_id,
+    data=data_transacao,
+
+    subcategoria=subcategoria,
+    recorrente=recorrente,
+    frequencia=frequencia
+)
     db.session.add(transacao)
     db.session.commit()
     return jsonify({'id': transacao.id, 'mensagem': 'Transacao criada'}), 201

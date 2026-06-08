@@ -13,10 +13,15 @@ def create_app():
     db.init_app(app)
     
     CORS(app,
-         origins=["http://localhost:8000", "http://127.0.0.1:8000"],
-         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-         allow_headers=["Content-Type", "Authorization"],
-         supports_credentials=True)
+     origins=[
+         "http://localhost:5500",
+         "http://127.0.0.1:5500",
+         "http://localhost:8000",
+         "http://127.0.0.1:8000"
+     ],
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+     allow_headers=["Content-Type", "Authorization"],
+     supports_credentials=True)
     
     app.register_blueprint(api, url_prefix='/api')
     app.register_blueprint(auth_bp, url_prefix='/auth')
