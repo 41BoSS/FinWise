@@ -285,7 +285,32 @@ function renderizarCategorias(tipo) {
                 return;
             }
 
+let ultimaData = '';
 transacoes.forEach(t => {
+    if (ultimaData !== t.data) {
+
+    const dataTitulo =
+        document.createElement('h3');
+
+    dataTitulo.className =
+        'historico-data';
+
+    dataTitulo.textContent =
+        new Date(t.data)
+        .toLocaleDateString(
+            'pt-BR',
+            {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            }
+        );
+
+    lista.appendChild(dataTitulo);
+
+    ultimaData = t.data;
+}
 
     const item = document.createElement('div');
     item.className = 'historico-item';
@@ -297,11 +322,21 @@ transacoes.forEach(t => {
             ? t.descricao
             : (t.subcategoria || t.categoria || 'Sem categoria');
 
-    const subtitulo =
-        t.subcategoria &&
-        titulo !== t.subcategoria
-            ? `${t.categoria} • ${t.subcategoria}`
-            : (t.categoria || 'Sem categoria');
+let subtitulo = '';
+
+if (
+    t.subcategoria &&
+    titulo !== t.subcategoria
+) {
+    subtitulo =
+        `${t.categoria} • ${t.subcategoria}`;
+}
+else if (
+    titulo !== t.categoria
+) {
+    subtitulo =
+        t.categoria;
+}
 
     item.innerHTML = `
         <div class="historico-info">
@@ -310,9 +345,11 @@ transacoes.forEach(t => {
                 ${titulo}
             </div>
 
-            <div class="historico-categoria">
-                ${subtitulo}
-            </div>
+${subtitulo ? `
+<div class="historico-categoria">
+    ${subtitulo}
+</div>
+` : ''}
 
         </div>
 
