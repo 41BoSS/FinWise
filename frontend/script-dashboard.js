@@ -285,28 +285,98 @@ function renderizarCategorias(tipo) {
                 return;
             }
 
-            transacoes.forEach(t => {
-                const item = document.createElement('div');
-                item.className = 'historico-item';
-                item.innerHTML = `
-                    <div class="historico-info">
-                        <div class="historico-titulo">${t.descricao}</div>
-                   <div class="historico-categoria">
-    ${t.categoria || 'Sem categoria'}
-    ${t.subcategoria ? ' • ' + t.subcategoria : ''}
-</div>
-                    <div class="historico-valor ${t.tipo === 'receita' ? 'receita' : 'despesa'}">
-                        ${t.tipo === 'receita' ? '+' : '-'}
-                        R$ ${Math.abs(t.valor).toFixed(2).replace('.', ',')}
-                    </div>
-                `;
-                lista.appendChild(item);
-            });
+transacoes.forEach(t => {
+
+    const item = document.createElement('div');
+    item.className = 'historico-item';
+
+    const titulo =
+        t.descricao &&
+        t.descricao.trim() !== '' &&
+        t.descricao !== 'Sem descrição'
+            ? t.descricao
+            : (t.subcategoria || t.categoria || 'Sem categoria');
+
+    const subtitulo =
+        t.subcategoria &&
+        titulo !== t.subcategoria
+            ? `${t.categoria} • ${t.subcategoria}`
+            : (t.categoria || 'Sem categoria');
+
+    item.innerHTML = `
+        <div class="historico-info">
+
+            <div class="historico-titulo">
+                ${titulo}
+            </div>
+
+            <div class="historico-categoria">
+                ${subtitulo}
+            </div>
+
+        </div>
+
+        <div class="historico-valor ${t.tipo === 'receita' ? 'receita' : 'despesa'}">
+            ${t.tipo === 'receita' ? '+' : '-'}
+            R$ ${Math.abs(t.valor).toFixed(2).replace('.', ',')}
+        </div>
+    `;
+
+    lista.appendChild(item);
+
+});
 
         } catch (erro) {
             console.error('Erro ao carregar histórico:', erro);
         }
     }
+
+// ==== FUNÇÃO PARA CARREGAR PERFIL =====
+
+    async function carregarPerfil() {
+    try {
+        const res = await fetch(
+            'http://localhost:5000/api/usuario',
+            {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            }
+        );
+
+        const usuario = await res.json();
+
+        const avatarEl =
+            document.querySelector('.perfil-avatar');
+
+        const nomeEl =
+            document.querySelector('.perfil-nome');
+
+        const campos =
+            document.querySelectorAll('.perfil-campo p');
+
+        if (avatarEl) {
+            avatarEl.textContent =
+                (usuario.nome || '?')[0].toUpperCase();
+        }
+
+        if (nomeEl) {
+            nomeEl.textContent =
+                usuario.nome || '';
+        }
+
+        if (campos[0]) {
+            campos[0].textContent =
+                usuario.email || '';
+        }
+
+    } catch (err) {
+        console.error(
+            'Erro ao carregar perfil:',
+            err
+        );
+    }
+}
 
     // ===== 6. MODAL — REFERÊNCIAS =====
     const modal           = document.getElementById('modal-transacao');
@@ -403,7 +473,8 @@ btnDespesa.addEventListener('click', function () {
         const valorRaw = inputValor.value.replace(',', '.');
         const valor    = parseFloat(valorRaw);
         const dataRaw  = inputData.value;
-        const descricao = document.getElementById('input-descricao').value || 'Sem descrição';
+        const descricao =
+    document.getElementById('input-descricao').value.trim();
 
         if (!valor || valor <= 0) {
             alert('Informe um valor válido.');
@@ -475,47 +546,6 @@ const body = {
             alert('Erro ao salvar transação.');
             console.error(err);
         }
-        async function carregarPerfil() {
-    try {
-        const res = await fetch(
-            'http://localhost:5000/api/usuario',
-            {
-                headers: {
-                    'Authorization': 'Bearer ' + token
-                }
-            }
-        );
-
-        const usuario = await res.json();
-
-        const avatarEl =
-            document.querySelector('.perfil-avatar');
-
-        const nomeEl =
-            document.querySelector('.perfil-nome');
-
-        const campos =
-            document.querySelectorAll('.perfil-campo p');
-
-        if (avatarEl)
-            avatarEl.textContent =
-                (usuario.nome || '?')[0].toUpperCase();
-
-        if (nomeEl)
-            nomeEl.textContent =
-                usuario.nome || '';
-
-        if (campos[0])
-            campos[0].textContent =
-                usuario.email || '';
-
-    } catch (err) {
-        console.error(
-            'Erro ao carregar perfil:',
-            err
-        );
-    }
-}
     });
 
     // ===== 13. AVATAR — LOGOUT =====

@@ -36,6 +36,7 @@ def listar_transacoes():
     'id': t.id,
     'descricao': t.descricao,
     'valor': float(t.valor),
+    'tipo': t.tipo,
     'categoria': t.categoria.nome if t.categoria else None,
     'subcategoria': t.subcategoria,
     'recorrente': t.recorrente,
