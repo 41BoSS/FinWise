@@ -48,6 +48,54 @@ class Categoria(db.Model):
 
 class Transacao(db.Model):
     __tablename__ = 'transacoes'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    usuario_id = db.Column(
+        db.Integer,
+        db.ForeignKey('usuarios.id'),
+        nullable=False
+    )
+
+    categoria_id = db.Column(
+        db.Integer,
+        db.ForeignKey('categorias.id'),
+        nullable=False
+    )
+
+    descricao = db.Column(db.String(255), nullable=False)
+
+    valor = db.Column(db.Float, nullable=False)
+
+    tipo = db.Column(db.String(20), nullable=False)
+
+    data = db.Column(db.Date, nullable=False)
+
+    subcategoria = db.Column(db.String(120))
+
+    recorrente = db.Column(
+        db.Boolean,
+        default=False
+    )
+
+    frequencia = db.Column(
+        db.String(50)
+    )
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'usuario_id': self.usuario_id,
+            'categoria_id': self.categoria_id,
+            'descricao': self.descricao,
+            'valor': self.valor,
+            'tipo': self.tipo,
+            'data': self.data.isoformat() if self.data else None,
+            'subcategoria': self.subcategoria,
+            'recorrente': self.recorrente,
+            'frequencia': self.frequencia
+        }
+    __tablename__ = 'transacoes'
     id = db.Column(db.Integer, primary_key=True)
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     categoria_id = db.Column(db.Integer, db.ForeignKey('categorias.id'), nullable=False)
