@@ -29,20 +29,32 @@ def verificar_token(f):
 @api.route('/transacoes', methods=['GET'])
 @verificar_token
 def listar_transacoes():
-    transacoes = Transacao.query.filter_by(usuario_id=request.usuario_id).order_by(Transacao.id.desc()).all()
+
+    transacoes = (
+        Transacao.query
+        .filter_by(usuario_id=request.usuario_id)
+        .order_by(
+            Transacao.data.desc(),
+            Transacao.id.desc()
+        )
+        .all()
+    )
+
     resultado = []
+
     for t in transacoes:
         resultado.append({
-    'id': t.id,
-    'descricao': t.descricao,
-    'valor': float(t.valor),
-    'tipo': t.tipo,
-    'categoria': t.categoria.nome if t.categoria else None,
-    'subcategoria': t.subcategoria,
-    'recorrente': t.recorrente,
-    'frequencia': t.frequencia,
-    'data': t.data.strftime('%Y-%m-%d')
-})
+            'id': t.id,
+            'descricao': t.descricao,
+            'valor': float(t.valor),
+            'tipo': t.tipo,
+            'categoria': t.categoria.nome if t.categoria else None,
+            'subcategoria': t.subcategoria,
+            'recorrente': t.recorrente,
+            'frequencia': t.frequencia,
+            'data': t.data.strftime('%Y-%m-%d')
+        })
+
     return jsonify(resultado)
 
 @api.route('/transacoes', methods=['POST'])
@@ -59,8 +71,14 @@ def criar_transacao():
     recorrente = dados.get('recorrente', False)
     frequencia = dados.get('frequencia')
 
-    if not all([descricao, valor, categoria_nome, tipo]):
-        return jsonify({'erro': 'Campos obrigatorios ausentes'}), 400
+    if not all([
+    valor,
+    categoria_nome,
+    tipo
+   ]):
+     return jsonify({
+        'erro': 'Campos obrigatorios ausentes'
+    }), 400
 
     categoria = Categoria.query.filter_by(nome=categoria_nome).first()
     if not categoria:
@@ -92,7 +110,8 @@ def criar_transacao():
 @api.route('/transacoes/<int:id>', methods=['DELETE'])
 @verificar_token
 def deletar_transacao(id):
-    transacao = Transacao.query.filter_by(id=id, usuario_id=request.usuario_id).first()
+    transacao = Transacao.query\
+        .filter_by(id=id, usuario_id=request.usuario_id).first()
     if not transacao:
         return jsonify({'erro': 'Transacao nao encontrada'}), 404
     db.session.delete(transacao)
@@ -164,6 +183,17 @@ def dashboard():
 def atualizar_transacao(id):
     transacao = Transacao.query.filter_by(id=id, usuario_id=request.usuario_id).first_or_404()
     dados = request.get_json()
+    if 'tipo' in dados:
+        transacao.tipo = dados['tipo']
+
+    if 'subcategoria' in dados:
+        transacao.subcategoria = dados['subcategoria']
+
+    if 'recorrente' in dados:
+        transacao.recorrente = dados['recorrente']
+
+    if 'frequencia' in dados:
+        transacao.frequencia = dados['frequencia']
     if 'descricao' in dados:
         transacao.descricao = dados['descricao']
     if 'valor' in dados:
@@ -174,19 +204,22 @@ def atualizar_transacao(id):
         if not categoria:
             categoria = Categoria(nome=cat_nome)
             db.session.add(categoria)
+            transacao.categoria_id = categoria.id
             db.session.commit()
-        transacao.categoria_id = categoria.id
     if 'data' in dados:
         transacao.data = datetime.strptime(dados['data'], '%Y-%m-%d').date()
     db.session.commit()
     return jsonify({
-        'id': transacao.id,
-        'descricao': transacao.descricao,
-        'valor': float(transacao.valor),
-        'tipo': transacao.tipo,
-        'categoria': transacao.categoria.nome if transacao.categoria else None,
-        'data': transacao.data.strftime('%Y-%m-%d')
-    })
+    'id': transacao.id,
+    'descricao': transacao.descricao,
+    'valor': float(transacao.valor),
+    'tipo': transacao.tipo,
+    'categoria': transacao.categoria.nome if transacao.categoria else None,
+    'subcategoria': transacao.subcategoria,
+    'recorrente': transacao.recorrente,
+    'frequencia': transacao.frequencia,
+    'data': transacao.data.strftime('%Y-%m-%d')
+})
 
 @api.route('/graficos/donut', methods=['GET'])
 @verificar_token

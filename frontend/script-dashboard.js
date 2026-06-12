@@ -191,6 +191,8 @@ function renderizarCategorias(tipo) {
             console.error('Erro ao carregar dashboard:', err);
         }
     }
+    // Inicialização
+carregarDashboard();
 
     // ===== 4. CARREGAR GRÁFICOS =====
     async function carregarGraficos() {
@@ -277,6 +279,10 @@ function renderizarCategorias(tipo) {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
             const transacoes = await resposta.json();
+            console.log(transacoes);
+            transacoes.sort(
+    (a, b) => new Date(b.data) - new Date(a.data)
+);
             const lista = document.getElementById('historico-lista');
             lista.innerHTML = '';
 
@@ -286,31 +292,33 @@ function renderizarCategorias(tipo) {
             }
 
 let ultimaData = '';
+
 transacoes.forEach(t => {
+
     if (ultimaData !== t.data) {
 
-    const dataTitulo =
-        document.createElement('h3');
+        const dataTitulo =
+            document.createElement('h3');
 
-    dataTitulo.className =
-        'historico-data';
+        dataTitulo.className =
+            'historico-data';
 
-    dataTitulo.textContent =
-        new Date(t.data)
-        .toLocaleDateString(
-            'pt-BR',
-            {
-                weekday: 'long',
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric'
-            }
-        );
+        dataTitulo.textContent =
+            new Date(t.data + 'T00:00:00')
+                .toLocaleDateString(
+                    'pt-BR',
+                    {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                    }
+                );
 
-    lista.appendChild(dataTitulo);
+        lista.appendChild(dataTitulo);
 
-    ultimaData = t.data;
-}
+        ultimaData = t.data;
+    }
 
     const item = document.createElement('div');
     item.className = 'historico-item';
@@ -338,28 +346,204 @@ else if (
         t.categoria;
 }
 
-    item.innerHTML = `
-        <div class="historico-info">
+item.innerHTML = `
+    <div class="historico-info">
 
-            <div class="historico-titulo">
-                ${titulo}
-            </div>
+        <div class="historico-titulo">
+            ${titulo}
+        </div>
 
-${subtitulo ? `
-<div class="historico-categoria">
-    ${subtitulo}
+        ${subtitulo ? `
+        <div class="historico-categoria">
+            ${subtitulo}
+        </div>
+        ` : ''}
+
+    </div>
+
+<div class="historico-acoes">
+
+    <div class="historico-valor ${t.tipo === 'receita' ? 'receita' : 'despesa'}">
+        ${t.tipo === 'receita' ? '+' : '-'}
+        R$ ${Math.abs(t.valor).toFixed(2).replace('.', ',')}
+    </div>
+
+    <button
+        class="btn-editar"
+        data-id="${t.id}">
+        <i class="fas fa-pen"></i>
+    </button>
+
+    <button
+        class="btn-excluir"
+        data-id="${t.id}">
+        <i class="fas fa-trash"></i>
+    </button>
+
 </div>
-` : ''}
-
-        </div>
-
-        <div class="historico-valor ${t.tipo === 'receita' ? 'receita' : 'despesa'}">
-            ${t.tipo === 'receita' ? '+' : '-'}
-            R$ ${Math.abs(t.valor).toFixed(2).replace('.', ',')}
-        </div>
-    `;
+`;
 
     lista.appendChild(item);
+    const btnExcluir =
+    item.querySelector('.btn-excluir');
+
+btnExcluir.addEventListener(
+    'click',
+    async () => {
+
+        const confirmar =
+            confirm(
+                'Deseja excluir esta transação?'
+            );
+
+        if (!confirmar) return;
+
+        try {
+
+            const resposta =
+                await fetch(
+                    `http://localhost:5000/api/transacoes/${t.id}`,
+                    {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization':
+                                'Bearer ' + token
+                        }
+                    }
+                );
+
+            if (resposta.ok) {
+
+                await carregarDashboard();
+
+            } else {
+
+                alert(
+                    'Erro ao excluir transação.'
+                );
+
+            }
+
+        } catch (erro) {
+
+            console.error(erro);
+
+        }
+
+    }
+);
+
+const btnEditar =
+    item.querySelector('.btn-editar');
+
+btnEditar.addEventListener(
+    'click',
+    () => {
+
+        modal.style.display = 'flex';
+
+        document.getElementById(
+            'input-valor'
+        ).value =
+            Number(t.valor)
+                .toFixed(2)
+                .replace('.', ',');
+
+        document.getElementById(
+            'input-descricao'
+        ).value =
+            t.descricao || '';
+
+        const data =
+            new Date(
+                t.data + 'T00:00:00'
+            );
+
+        document.getElementById(
+            'input-data'
+        ).value =
+            String(data.getDate()).padStart(2,'0')
+            + '/'
+            + String(data.getMonth()+1).padStart(2,'0')
+            + '/'
+            + data.getFullYear();
+
+        if (t.tipo === 'receita') {
+
+            btnReceita.click();
+
+        } else {
+
+            btnDespesa.click();
+
+        }
+
+setTimeout(() => {
+
+    categoriaSelecionada =
+        t.categoria;
+
+    const categoriaBtn =
+        document.querySelector(
+            `[data-categoria="${t.categoria}"]`
+        );
+
+    if (categoriaBtn) {
+
+        categoriaBtn.classList.add(
+            'selected'
+        );
+
+        const selectSubcategoria =
+            document.getElementById(
+                'select-subcategoria'
+            );
+
+        const subcategorias =
+            CATEGORIAS[t.tipo][t.categoria] || [];
+
+        selectSubcategoria.innerHTML =
+            '<option value="">Selecione...</option>';
+
+        subcategorias.forEach(sub => {
+
+            selectSubcategoria.innerHTML += `
+                <option value="${sub}">
+                    ${sub}
+                </option>
+            `;
+
+        });
+
+        if (t.subcategoria) {
+
+            selectSubcategoria.value =
+                t.subcategoria;
+
+        }
+
+    }
+
+    document.getElementById(
+        'input-descricao'
+    ).value = t.descricao || '';
+
+    toggleRecorrente.checked =
+        t.recorrente || false;
+
+    recorrenteDetalhes.style.display =
+        t.recorrente ? 'block' : 'none';
+
+    document.getElementById(
+        'select-frequencia'
+    ).value =
+        t.frequencia || 'Mensal';
+
+}, 100);
+
+    }
+
+);
 
 });
 
@@ -658,17 +842,80 @@ if (btnAlterarSenha) {
         });
     });
 
-    function filtrarHistorico(categoria) {
-        const items = document.querySelectorAll('#historico-lista .historico-item');
-        items.forEach(item => {
-            const cat = item.querySelector('.historico-categoria')
-                ?.textContent?.trim();
-            item.style.display =
-                (categoria === 'todos' || cat === categoria) ? 'flex' : 'none';
-        });
-    }
+function filtrarHistorico(categoria) {
 
-    // ===== 18. INICIAR (sempre por último) =====
-    carregarDashboard();
+    const items =
+        document.querySelectorAll(
+            '#historico-lista .historico-item'
+        );
+
+    items.forEach(item => {
+
+        const textoCategoria =
+            item.querySelector('.historico-categoria')
+                ?.textContent
+                ?.trim() || '';
+
+        const titulo =
+            item.querySelector('.historico-titulo')
+                ?.textContent
+                ?.trim() || '';
+
+        let mostrar = false;
+
+        if (categoria === 'todos') {
+
+            mostrar = true;
+
+        } else {
+
+            mostrar =
+                textoCategoria.includes(categoria) ||
+                titulo.includes(categoria);
+
+        }
+
+        item.style.display =
+            mostrar ? 'flex' : 'none';
+
+    });
+
+    atualizarDatasHistorico();
+}
+
+function atualizarDatasHistorico() {
+
+    const lista =
+        document.getElementById('historico-lista');
+
+    let dataAtual = null;
+    let possuiItensVisiveis = false;
+
+    [...lista.children].forEach(elemento => {
+
+        if (elemento.classList.contains('historico-data')) {
+
+            if (dataAtual && !possuiItensVisiveis) {
+                dataAtual.style.display = 'none';
+            }
+
+            dataAtual = elemento;
+            possuiItensVisiveis = false;
+
+            dataAtual.style.display = 'block';
+        }
+
+        if (
+            elemento.classList.contains('historico-item') &&
+            elemento.style.display !== 'none'
+        ) {
+            possuiItensVisiveis = true;
+        }
+    });
+
+    if (dataAtual && !possuiItensVisiveis) {
+        dataAtual.style.display = 'none';
+    }
+}
 
 }); // fim DOMContentLoaded

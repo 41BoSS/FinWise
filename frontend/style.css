@@ -98,6 +98,43 @@ button[type="submit"]:hover {
   background-color: #219a52;
 }
 
+.historico-acoes {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-excluir {
+    border: none;
+    background: transparent;
+    color: #e74c3c;
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 32px;
+    height: 32px;
+
+    font-size: 16px;
+    outline: none;
+    box-shadow: none;
+}
+
+.btn-excluir i {
+    pointer-events: none;
+}
+
+.btn-excluir:hover {
+    color: #c0392b;
+    transform: scale(1.1);
+}
+
+.btn-excluir:hover {
+    transform: scale(1.1);
+}
+
 /* Lista de transações */
 .transaction-list {
   list-style: none;
@@ -184,4 +221,25 @@ footer {
   section {
     padding: 1rem;
   }
+}
+
+.btn-editar {
+    border: none;
+    background: transparent;
+    color: #3498db;
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 32px;
+    height: 32px;
+
+    font-size: 15px;
+}
+
+.btn-editar:hover {
+    color: #2980b9;
+    transform: scale(1.1);
 }
