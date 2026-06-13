@@ -1,3 +1,5 @@
+const token = localStorage.getItem('token');
+
 document.addEventListener('DOMContentLoaded', function() {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -127,6 +129,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const inputValor = document.getElementById('input-valor');
     const inputData = document.getElementById('input-data');
     const inputVencimento = document.getElementById('input-vencimento');
+    const toggleAgenda = document.getElementById('toggle-agenda');
+    const inputVencimentoAgenda = document.getElementById('input-vencimento-agenda');
+
 
     let tipoSelecionado = 'receita';
     let categoriaSelecionada = '';
@@ -144,6 +149,9 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('input-descricao').value = '';
         toggleRecorrente.checked = false;
         recorrenteDetalhes.style.display = 'none';
+        toggleAgenda.checked = false;
+        document.getElementById('agenda-detalhes').style.display = 'none';
+        inputVencimentoAgenda.value = '';
     });
 
     // Fechar modal
@@ -203,6 +211,12 @@ document.addEventListener('DOMContentLoaded', function() {
             inputVencimento.value = '';
         }
     });
+    toggleAgenda.addEventListener('change', function() {
+    document.getElementById('agenda-detalhes').style.display = this.checked ? 'block' : 'none';
+    if (!this.checked) inputVencimentoAgenda.value = '';
+});
+
+    formatarData(inputVencimentoAgenda);
 
     // Salvar transação
     btnSalvar.addEventListener('click', async function() {
@@ -244,6 +258,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 body.data_vencimento = vPartes[2] + '-' + vPartes[1] + '-' + vPartes[0];
             }
         }
+        if (toggleAgenda.checked && !toggleRecorrente.checked) {
+    const vencAgendaRaw = inputVencimentoAgenda.value;
+    if (vencAgendaRaw && vencAgendaRaw.length >= 10) {
+        const vPartes = vencAgendaRaw.split('/');
+        body.data_vencimento = vPartes[2] + '-' + vPartes[1] + '-' + vPartes[0];
+        body.recorrente = false;
+    }
+}
 
         try {
             const res = await fetch('http://localhost:5000/api/transacoes', {
@@ -277,3 +299,91 @@ document.addEventListener('DOMContentLoaded', function() {
     // Iniciar
     carregarDashboard();
 });
+
+// ===== NOTIFICAÇÕES =====
+async function carregarNotificacoes() {
+    try {
+        const res = await fetch('http://localhost:5000/api/agenda/alertas', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+        const badge = document.getElementById('badge-alertas');
+        const lista = document.getElementById('notif-lista');
+
+        // Badge
+        if (data.total > 0) {
+            badge.textContent = data.total;
+            badge.style.display = 'flex';
+        } else {
+            badge.style.display = 'none';
+        }
+
+        // Lista de notificações
+        lista.innerHTML = '';
+        if (data.alertas.length === 0) {
+            lista.innerHTML = '<div class="notif-vazio">Nenhuma notificação</div>';
+            return;
+        }
+
+        data.alertas.forEach(a => {
+            const dataParts = a.data_vencimento.split('-');
+            const dataFormatada = `${dataParts[2]}/${dataParts[1]}/${dataParts[0]}`;
+            const hoje = new Date();
+              hoje.setHours(0, 0, 0, 0);
+            const vencimento = new Date(a.data_vencimento + 'T00:00:00');
+            const diff = Math.round((vencimento - hoje) / (1000 * 60 * 60 * 24));
+            const valorFormatado = 'R$ ' + parseFloat(a.valor).toFixed(2).replace('.', ',');
+
+            let textoTempo = '';
+            if (a.tipo === 'receita') {
+              if (diff < 0) textoTempo = 'recebido hoje';
+              else if (diff === 0) textoTempo = 'receber hoje';
+              else if (diff === 1) textoTempo = 'receber em 1 dia';
+              else textoTempo = `receber em ${diff} dias`;
+          } else {
+              if (diff < 0) textoTempo = `venceu há ${Math.abs(diff)} dia(s)`;
+              else if (diff === 0) textoTempo = 'vence hoje';
+              else if (diff === 1) textoTempo = 'vence em 1 dia';
+              else textoTempo = `vence em ${diff} dias`;
+          }
+
+            const div = document.createElement('div');
+
+            let bgColor, iconColor;
+            if (a.tipo === 'receita') {
+              if (diff === 0) { bgColor = '#d4edda'; iconColor = '#1a7a5e'; }
+              else { bgColor = '#e8f5e9'; iconColor = '#279975'; }
+         } else {
+            if (a.status === 'vencido' || diff === 0) { bgColor = '#fdecea'; iconColor = '#e74c3c'; }
+            else { bgColor = '#fff8e1'; iconColor = '#f39c12'; }
+}
+
+            div.className = 'notif-item';
+            div.style.background = bgColor;
+            div.innerHTML = `
+               <div class="notif-titulo">
+               <i class="fas fa-bell" style="font-size:13px; color:${iconColor}; background:white; padding:4px; border-radius:50%;"></i>
+               <span style="color:${iconColor}; font-weight:600;">${a.descricao} ${textoTempo} - ${valorFormatado}</span>
+            </div>
+            <div class="notif-data">${a.categoria || 'Despesa'} • ${dataFormatada}</div>
+`;
+            div.onclick = () => window.location.href = 'agenda.html';
+            lista.appendChild(div);
+        });
+
+    } catch (err) { console.error('Erro ao carregar notificações:', err); }
+}
+
+// Abrir/fechar dropdown
+document.getElementById('sino-btn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    const dropdown = document.getElementById('notif-dropdown');
+    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+});
+
+// Fechar ao clicar fora
+document.addEventListener('click', function() {
+    document.getElementById('notif-dropdown').style.display = 'none';
+});
+
+carregarNotificacoes();

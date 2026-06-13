@@ -6,14 +6,11 @@ from auth import auth_bp
 
 def create_app():
     app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:1234@localhost/finwise'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['SECRET_KEY'] = 'sua_chave_secreta_super_segura_com_mais_de_32_caracteres_aqui_12345'
-    
+    app.config.from_object('config.Config')
     db.init_app(app)
     
     CORS(app,
-         origins=["http://localhost:8000", "http://127.0.0.1:8000"],
+         origins=["http://localhost:8000", "http://127.0.0.1:8000", "http://127.0.0.1:5500", "http://localhost:5500"],
          methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
          allow_headers=["Content-Type", "Authorization"],
          supports_credentials=True)

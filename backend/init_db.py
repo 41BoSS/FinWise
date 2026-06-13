@@ -16,7 +16,8 @@ with app.app_context():
     print("Tabelas criadas com sucesso!")
 
     # Cria o usuário padrão
-    usuario = Usuario(nome='Henri', email='henri@finwise.com', senha='123456')
+    usuario = Usuario(nome='Henri', email='henri@finwise.com')
+    usuario.set_password('123456')
     db.session.add(usuario)
     db.session.flush()  # Para obter o id do usuário
     print("Usuário padrão criado.")
@@ -31,9 +32,9 @@ with app.app_context():
 
     # Cria 3 transações de exemplo para o usuário 1
     transacoes = [
-        Transacao(descricao='Compra no supermercado', valor=150.00, data=date.today(), usuario_id=usuario.id, categoria_id=1),
-        Transacao(descricao='Passagem de ônibus', valor=4.40, data=date.today(), usuario_id=usuario.id, categoria_id=2),
-        Transacao(descricao='Aluguel do mês', valor=1200.00, data=date.today(), usuario_id=usuario.id, categoria_id=3)
+        Transacao(descricao='Compra no supermercado', valor=150.00, tipo='despesa', data=date.today(), usuario_id=usuario.id, categoria_id=1),
+        Transacao(descricao='Passagem de ônibus', valor=4.40, tipo='despesa', data=date.today(), usuario_id=usuario.id, categoria_id=2),
+        Transacao(descricao='Aluguel do mês', valor=1200.00, tipo='despesa', data=date.today(), usuario_id=usuario.id, categoria_id=3)
     ]
     for t in transacoes:
         db.session.add(t)

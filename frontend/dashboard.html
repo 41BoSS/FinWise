@@ -79,11 +79,23 @@
       gap: 20px;
     }
     .notification {
-      position: relative;
-      color: #279975;
-      font-size: 20px;
-      cursor: pointer;
-    }
+  position: relative;
+  color: #279975;
+  font-size: 20px;
+  cursor: pointer;
+}
+.notif-item {
+  padding: 14px 20px;
+  border-bottom: 1px solid #f5f5f5;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.notif-item:hover { background: #fafafa; }
+.notif-item.vencido .notif-titulo { color: #e74c3c; font-weight: 600; }
+.notif-item.proximo .notif-titulo { color: #333; font-weight: 500; }
+.notif-titulo { font-size: 14px; display: flex; align-items: center; gap: 8px; }
+.notif-data { font-size: 12px; color: #999; margin-top: 3px; }
+.notif-vazio { padding: 24px; text-align: center; color: #bbb; font-size: 14px; }
     .avatar {
       width: 40px;
       height: 40px;
@@ -487,6 +499,15 @@
         width: 95%;
         margin: 10px;
       }
+      .notif-item {
+    padding: 14px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-radius: 8px;
+    margin: 4px 8px;
+}
+.notif-item:hover { filter: brightness(0.95); }
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -499,7 +520,7 @@
       <ul>
         <li class="active"><i class="fas fa-home"></i> <span>Início</span></li>
         <li><i class="fas fa-history"></i> <span>Histórico</span></li>
-        <li><i class="fas fa-calendar-alt"></i> <span>Agenda</span></li>
+        <li onclick="window.location.href='agenda.html'"><i class="fas fa-calendar-alt"></i> <span>Agenda</span></li>
         <li><i class="fas fa-bell"></i> <span>Alertas</span></li>
         <li><i class="fas fa-user"></i> <span>Perfil</span></li>
       </ul>
@@ -512,9 +533,19 @@
         <p id="current-date"></p>
       </div>
       <div class="header-right">
-        <div class="notification">
-          <i class="fas fa-bell"></i>
-        </div>
+        <div class="notification" id="sino-btn">
+  <i class="fas fa-bell"></i>
+  <span id="badge-alertas" style="display:none; position:absolute; top:-6px; right:-6px; background:#e74c3c; color:white; border-radius:50%; width:18px; height:18px; font-size:11px; display:none; align-items:center; justify-content:center;"></span>
+
+  <!-- Dropdown -->
+  <div id="notif-dropdown" style="display:none; position:absolute; top:40px; right:0; width:320px; background:#fff; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.15); z-index:999; overflow:hidden;">
+    <div style="padding:16px 20px; font-weight:600; font-size:15px; border-bottom:1px solid #f0f0f0;">Notificações</div>
+    <div id="notif-lista" style="max-height:320px; overflow-y:auto;"></div>
+    <div style="padding:14px 20px; text-align:center; border-top:1px solid #f0f0f0;">
+      <a href="agenda.html" style="color:#279975; font-weight:600; font-size:14px; text-decoration:none;">Ver todos os alertas</a>
+    </div>
+  </div>
+</div>
         <div class="avatar"></div>
       </div>
     </header>
@@ -614,14 +645,35 @@
           <textarea class="form-textarea" id="input-descricao" placeholder="Adicione detalhes sobre esta transação..."></textarea>
         </div>
 
-        <!-- Despesa Recorrente -->
-        <div class="recorrente-toggle">
-          <span>É uma despesa recorrente?</span>
-          <label class="switch">
-            <input type="checkbox" id="toggle-recorrente">
-            <span class="slider"></span>
-          </label>
-        </div>
+        <!-- Adicionar à agenda -->
+<div class="recorrente-toggle">
+  <span>Adicionar à agenda?</span>
+  <label class="switch">
+    <input type="checkbox" id="toggle-agenda">
+    <span class="slider"></span>
+  </label>
+</div>
+
+<!-- Mini-janela Agenda (data de vencimento simples) -->
+<div id="agenda-detalhes" class="recorrente-detalhes" style="display: none;">
+  <div class="form-group">
+    <label class="form-label">Data de vencimento</label>
+    <input type="text" class="form-input" id="input-vencimento-agenda" placeholder="dd/mm/aaaa">
+  </div>
+  <div class="recorrente-badge">
+    <i class="fas fa-check-circle"></i>
+    Será adicionada à Agenda automaticamente
+  </div>
+</div>
+
+<!-- Despesa Recorrente -->
+<div class="recorrente-toggle">
+  <span>É uma transação recorrente?</span>
+  <label class="switch">
+    <input type="checkbox" id="toggle-recorrente">
+    <span class="slider"></span>
+  </label>
+</div>
 
         <!-- Mini-janela Recorrente -->
         <div id="recorrente-detalhes" class="recorrente-detalhes" style="display: none;">

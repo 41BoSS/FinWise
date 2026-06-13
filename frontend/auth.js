@@ -43,7 +43,7 @@ function handleRegister(e) {
   })
   .then(({ isOk, data }) => {
     if (isOk) {
-      window.location.href = '/login.html';
+      window.location.href = 'login.html';
     } else {
       alert(data.message || 'Erro no registro.');
     }
@@ -73,7 +73,7 @@ function handleLogin(e) {
   .then(({ isOk, data }) => {
     if (isOk && data.token) {
       localStorage.setItem('token', data.token);
-      window.location.href = '/dashboard.html';
+      window.location.href = 'dashboard.html';
     } else {
       alert(data.message || 'Erro no login.');
     }
@@ -83,7 +83,7 @@ function handleLogin(e) {
 
 function handleLogout() {
   localStorage.removeItem('token');
-  window.location.href = '/login.html';
+  window.location.href = 'login.html';
 }
 
 function togglePassword(inputId) {
