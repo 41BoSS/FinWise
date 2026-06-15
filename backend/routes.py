@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app
-from models import db, Transacao, Categoria, Usuario
+from models import db, Transacao, Categoria, Usuario, Agendamento
 from functools import wraps
 import jwt
 from datetime import date, datetime, timedelta
@@ -34,12 +34,15 @@ def listar_transacoes():
     for t in transacoes:
         resultado.append({
 <<<<<<< HEAD
-            'id': t.id,
-            'descricao': t.descricao,
-            'valor': float(t.valor),
-            'categoria': t.categoria.nome if t.categoria else None,
-            'data': t.data.strftime('%Y-%m-%d')
-        })
+    'id': t.id,
+    'descricao': t.descricao,
+    'valor': float(t.valor),
+    'categoria': t.categoria.nome if t.categoria else None,
+    'subcategoria': t.subcategoria,
+    'recorrente': t.recorrente,
+    'frequencia': t.frequencia,
+    'data': t.data.strftime('%Y-%m-%d')
+})
 =======
     'id': t.id,
     'descricao': t.descricao,
@@ -60,6 +63,13 @@ def criar_transacao():
     categoria_nome = dados.get('categoria')
     tipo = dados.get('tipo')
     data_str = dados.get('data')
+    recorrente = dados.get('recorrente', False)
+    frequencia = dados.get('frequencia', None)
+    data_vencimento_str = dados.get('data_vencimento', None)
+
+    subcategoria = dados.get('subcategoria')
+    recorrente = dados.get('recorrente', False)
+    frequencia = dados.get('frequencia')
 
     if not all([descricao, valor, categoria_nome, tipo]):
         return jsonify({'erro': 'Campos obrigatorios ausentes'}), 400
@@ -76,15 +86,65 @@ def criar_transacao():
         data_transacao = date.today()
 
     transacao = Transacao(
-        descricao=descricao,
-        valor=float(valor),
-        tipo=tipo,
-        categoria_id=categoria.id,
-        usuario_id=request.usuario_id,
-        data=data_transacao
-    )
+    descricao=descricao,
+    valor=float(valor),
+    tipo=tipo,
+    categoria_id=categoria.id,
+    usuario_id=request.usuario_id,
+    data=data_transacao,
+
+    subcategoria=subcategoria,
+    recorrente=recorrente,
+    frequencia=frequencia
+)
     db.session.add(transacao)
     db.session.commit()
+
+    if data_vencimento_str:
+        data_vencimento = datetime.strptime(data_vencimento_str, '%Y-%m-%d').date()
+
+        if recorrente and frequencia:
+            frequencia_lower = frequencia.lower()
+            if frequencia_lower == 'semanal':
+                total_ocorrencias = 12
+            elif frequencia_lower == 'mensal':
+                total_ocorrencias = 12
+            elif frequencia_lower == 'anual':
+                total_ocorrencias = 3
+            else:
+                total_ocorrencias = 12
+
+            data_atual = data_vencimento
+            for i in range(total_ocorrencias):
+                ag = Agendamento(
+                    usuario_id=request.usuario_id,
+                    descricao=descricao,
+                    valor=float(valor),
+                    categoria=categoria_nome,
+                    tipo=tipo,
+                    data_vencimento=data_atual,
+                    recorrente=True,
+                    frequencia=frequencia_lower,
+                    status='a_vencer'
+                )
+                db.session.add(ag)
+                data_atual = calcular_proxima_data(data_atual, frequencia_lower)
+            db.session.commit()
+        else:
+            agendamento = Agendamento(
+                usuario_id=request.usuario_id,
+                descricao=descricao,
+                valor=float(valor),
+                categoria=categoria_nome,
+                tipo=tipo,
+                data_vencimento=data_vencimento,
+                recorrente=False,
+                frequencia=None,
+                status='a_vencer'
+            )
+            db.session.add(agendamento)
+            db.session.commit()
+
     return jsonify({'id': transacao.id, 'mensagem': 'Transacao criada'}), 201
 
 @api.route('/transacoes/<int:id>', methods=['DELETE'])
@@ -144,6 +204,25 @@ def dashboard():
             'categoria': t.categoria.nome if t.categoria else None,
             'data': t.data.strftime('%Y-%m-%d')
         })
+
+    agendamentos_alerta = Agendamento.query.filter(
+        Agendamento.usuario_id == request.usuario_id,
+        Agendamento.status != 'pago',
+        Agendamento.data_vencimento <= hoje + timedelta(days=3)
+    ).all()
+
+    alertas = []
+    for a in agendamentos_alerta:
+        status_atual = a.calcular_status()
+        if status_atual in ('vencido', 'proximo'):
+            alertas.append({
+                'id': a.id,
+                'descricao': a.descricao,
+                'valor': float(a.valor),
+                'data_vencimento': a.data_vencimento.strftime('%Y-%m-%d'),
+                'status': status_atual
+            })
+
     return jsonify({
         'nome': usuario.nome,
         'avatar': usuario.nome[0].upper() if usuario.nome else '',
@@ -154,7 +233,8 @@ def dashboard():
         },
         'saude_financeira': saude,
         'data_formatada': data_formatada,
-        'ultimas_transacoes': ultimas
+        'ultimas_transacoes': ultimas,
+        'alertas_agenda': alertas
     })
 
 @api.route('/transacoes/<int:id>', methods=['PUT'])
@@ -310,3 +390,131 @@ def grafico_barras():
         'investimentos': investimentos_lista,
         'apostas': apostas_lista
     })
+
+# ─────────────────────────────────────────────
+# AGENDA
+# ─────────────────────────────────────────────
+
+@api.route('/agenda', methods=['GET'])
+@verificar_token
+def listar_agenda():
+    mes = request.args.get('mes', type=int)
+    ano = request.args.get('ano', type=int)
+
+    query = Agendamento.query.filter_by(usuario_id=request.usuario_id)
+
+    if mes and ano:
+        from sqlalchemy import extract
+        query = query.filter(
+            extract('month', Agendamento.data_vencimento) == mes,
+            extract('year', Agendamento.data_vencimento) == ano
+        )
+
+    agendamentos = query.order_by(Agendamento.data_vencimento.asc()).all()
+    return jsonify([a.to_dict() for a in agendamentos])
+
+@api.route('/agenda/<int:id>/pagar', methods=['PUT'])
+@verificar_token
+def marcar_pago(id):
+    agendamento = Agendamento.query.filter_by(id=id, usuario_id=request.usuario_id).first()
+    if not agendamento:
+        return jsonify({'erro': 'Agendamento nao encontrado'}), 404
+
+    agendamento.status = 'pago'
+    agendamento.data_pagamento = date.today()
+    db.session.commit()
+
+    if agendamento.recorrente and agendamento.frequencia:
+        proxima_data = calcular_proxima_data(agendamento.data_vencimento, agendamento.frequencia)
+        novo = Agendamento(
+            usuario_id=agendamento.usuario_id,
+            descricao=agendamento.descricao,
+            valor=agendamento.valor,
+            categoria=agendamento.categoria,
+            data_vencimento=proxima_data,
+            recorrente=True,
+            frequencia=agendamento.frequencia,
+            status='a_vencer'
+        )
+        db.session.add(novo)
+        db.session.commit()
+
+    return jsonify({'mensagem': 'Agendamento marcado como pago', 'agendamento': agendamento.to_dict()})
+
+@api.route('/agenda/<int:id>', methods=['DELETE'])
+@verificar_token
+def deletar_agendamento(id):
+    agendamento = Agendamento.query.filter_by(id=id, usuario_id=request.usuario_id).first()
+    if not agendamento:
+        return jsonify({'erro': 'Agendamento nao encontrado'}), 404
+    db.session.delete(agendamento)
+    db.session.commit()
+    return jsonify({'mensagem': 'Agendamento deletado'})
+
+@api.route('/agenda/alertas', methods=['GET'])
+@verificar_token
+def alertas_agenda():
+    hoje = date.today()
+    agendamentos = Agendamento.query.filter(
+        Agendamento.usuario_id == request.usuario_id,
+        Agendamento.status != 'pago',
+        Agendamento.data_vencimento <= hoje + timedelta(days=3)
+    ).order_by(Agendamento.data_vencimento.asc()).all()
+
+    resultado = []
+    for a in agendamentos:
+        d = a.to_dict()
+        if d['status'] in ('vencido', 'proximo'):
+            resultado.append(d)
+
+    return jsonify({
+        'total': len(resultado),
+        'alertas': resultado
+    })
+
+# ─────────────────────────────────────────────
+# UTILITÁRIOS
+# ─────────────────────────────────────────────
+@api.route('/agenda/<int:id>/cancelar-recorrencia', methods=['DELETE'])
+@verificar_token
+def cancelar_recorrencia(id):
+    """Cancela todas as ocorrências futuras de uma recorrência."""
+    agendamento = Agendamento.query.filter_by(id=id, usuario_id=request.usuario_id).first()
+    if not agendamento:
+        return jsonify({'erro': 'Agendamento nao encontrado'}), 404
+
+    # Remove todas as ocorrências futuras com mesma descrição, valor e frequência
+    hoje = date.today()
+    Agendamento.query.filter(
+    Agendamento.usuario_id == request.usuario_id,
+    Agendamento.descricao == agendamento.descricao,
+    Agendamento.valor == agendamento.valor,
+    Agendamento.frequencia == agendamento.frequencia,
+    Agendamento.tipo == agendamento.tipo,
+    Agendamento.data_vencimento > agendamento.data_vencimento,
+    Agendamento.status == 'a_vencer'
+).delete()
+    db.session.commit()
+
+    return jsonify({'mensagem': 'Recorrencia cancelada. Historico mantido.'})
+
+def calcular_proxima_data(data_atual, frequencia):
+    frequencia = frequencia.lower()
+    if frequencia == 'semanal':
+        return data_atual + timedelta(weeks=1)
+    elif frequencia == 'quinzenal':
+        return data_atual + timedelta(weeks=2)
+    elif frequencia == 'mensal':
+        mes = data_atual.month + 1
+        ano = data_atual.year
+        if mes > 12:
+            mes = 1
+            ano += 1
+        import calendar
+        ultimo_dia = calendar.monthrange(ano, mes)[1]
+        dia = min(data_atual.day, ultimo_dia)
+        return date(ano, mes, dia)
+    elif frequencia == 'anual':
+        return date(data_atual.year + 1, data_atual.month, data_atual.day)
+    else:
+        return data_atual + timedelta(days=30)

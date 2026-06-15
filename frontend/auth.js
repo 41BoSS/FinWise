@@ -21,26 +21,35 @@ if (logoutBtn) {
 
 function handleRegister(e) {
   e.preventDefault();
+
   const name = document.getElementById('name').value.trim();
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value.trim();
   const confirmPassword = document.getElementById('confirm_password').value.trim();
   const terms = document.getElementById('terms').checked;
-  
+
   if (!name || !email || !password || !confirmPassword || !terms) {
     alert('Preencha todos os campos e aceite os termos.');
     return;
   }
+
   if (password !== confirmPassword) {
     alert('As senhas não conferem.');
     return;
   }
-  
+
   fetch(`${API_URL}/auth/registro`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ nome: name, email, senha: password })
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      nome: name,
+      email,
+      senha: password
+    })
   })
+<<<<<<< HEAD
   .then(res => {
     const isOk = res.ok;
     return res.json().then(data => ({ isOk, data }));
@@ -48,7 +57,7 @@ function handleRegister(e) {
   .then(({ isOk, data }) => {
     if (isOk) {
 <<<<<<< HEAD
-      window.location.href = '/login.html';
+      window.location.href = 'login.html';
 =======
       window.location.href = 'login.html';
 >>>>>>> 39da51e (Correções e pequenas adições de melhorias na funcionalidade de perfil e histórico, além de ajustes no código para melhor organização e clareza.)
@@ -57,23 +66,46 @@ function handleRegister(e) {
     }
   })
   .catch(err => alert('Erro de conexão'));
+=======
+    .then(res => {
+      const isOk = res.ok;
+      return res.json().then(data => ({ isOk, data }));
+    })
+    .then(({ isOk, data }) => {
+      if (isOk) {
+        window.location.href = 'login.html';
+      } else {
+        alert(data.message || 'Erro no registro.');
+      }
+    })
+    .catch(() => {
+      alert('Erro de conexão.');
+    });
+>>>>>>> 3712b2f6417744004533a766da84d48d31cc0511
 }
 
 function handleLogin(e) {
   e.preventDefault();
+
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value.trim();
-  
+
   if (!email || !password) {
     alert('Preencha email e senha.');
     return;
   }
-  
+
   fetch(`${API_URL}/auth/login`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, senha: password })
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      email,
+      senha: password
+    })
   })
+<<<<<<< HEAD
   .then(res => {
     const isOk = res.ok;
     return res.json().then(data => ({ isOk, data }));
@@ -82,7 +114,7 @@ function handleLogin(e) {
     if (isOk && data.token) {
       localStorage.setItem('token', data.token);
 <<<<<<< HEAD
-      window.location.href = '/dashboard.html';
+      window.location.href = 'dashboard.html';
 =======
       window.location.href = 'dashboard.html';
 >>>>>>> 39da51e (Correções e pequenas adições de melhorias na funcionalidade de perfil e histórico, além de ajustes no código para melhor organização e clareza.)
@@ -96,7 +128,12 @@ function handleLogin(e) {
 function handleLogout() {
   localStorage.removeItem('token');
 <<<<<<< HEAD
-  window.location.href = '/login.html';
+=======
+
+  // Corrigido
+>>>>>>> 3712b2f6417744004533a766da84d48d31cc0511
+<<<<<<< HEAD
+  window.location.href = 'login.html';
 =======
   window.location.href = 'login.html';
 >>>>>>> 39da51e (Correções e pequenas adições de melhorias na funcionalidade de perfil e histórico, além de ajustes no código para melhor organização e clareza.)
@@ -104,7 +141,10 @@ function handleLogout() {
 
 function togglePassword(inputId) {
   const input = document.getElementById(inputId);
+
   if (input) {
-    input.type = input.type === 'password' ? 'text' : 'password';
+    input.type = input.type === 'password'
+      ? 'text'
+      : 'password';
   }
 }
