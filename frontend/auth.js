@@ -1,9 +1,4 @@
-<<<<<<< HEAD
-const API_URL = 'http://localhost:5000';
-=======
 const API_URL = 'http://127.0.0.1:5000';
->>>>>>> 39da51e (Correções e pequenas adições de melhorias na funcionalidade de perfil e histórico, além de ajustes no código para melhor organização e clareza.)
-
 const registerForm = document.getElementById('register-form');
 if (registerForm) {
   registerForm.addEventListener('submit', handleRegister);
@@ -49,41 +44,23 @@ function handleRegister(e) {
       senha: password
     })
   })
-<<<<<<< HEAD
+
   .then(res => {
     const isOk = res.ok;
     return res.json().then(data => ({ isOk, data }));
   })
   .then(({ isOk, data }) => {
     if (isOk) {
-<<<<<<< HEAD
       window.location.href = 'login.html';
-=======
+
       window.location.href = 'login.html';
->>>>>>> 39da51e (Correções e pequenas adições de melhorias na funcionalidade de perfil e histórico, além de ajustes no código para melhor organização e clareza.)
     } else {
       alert(data.message || 'Erro no registro.');
     }
   })
   .catch(err => alert('Erro de conexão'));
-=======
-    .then(res => {
-      const isOk = res.ok;
-      return res.json().then(data => ({ isOk, data }));
-    })
-    .then(({ isOk, data }) => {
-      if (isOk) {
-        window.location.href = 'login.html';
-      } else {
-        alert(data.message || 'Erro no registro.');
-      }
-    })
-    .catch(() => {
-      alert('Erro de conexão.');
-    });
->>>>>>> 3712b2f6417744004533a766da84d48d31cc0511
 }
-
+        
 function handleLogin(e) {
   e.preventDefault();
 
@@ -105,7 +82,6 @@ function handleLogin(e) {
       senha: password
     })
   })
-<<<<<<< HEAD
   .then(res => {
     const isOk = res.ok;
     return res.json().then(data => ({ isOk, data }));
@@ -113,11 +89,7 @@ function handleLogin(e) {
   .then(({ isOk, data }) => {
     if (isOk && data.token) {
       localStorage.setItem('token', data.token);
-<<<<<<< HEAD
       window.location.href = 'dashboard.html';
-=======
-      window.location.href = 'dashboard.html';
->>>>>>> 39da51e (Correções e pequenas adições de melhorias na funcionalidade de perfil e histórico, além de ajustes no código para melhor organização e clareza.)
     } else {
       alert(data.message || 'Erro no login.');
     }
@@ -127,16 +99,8 @@ function handleLogin(e) {
 
 function handleLogout() {
   localStorage.removeItem('token');
-<<<<<<< HEAD
-=======
-
   // Corrigido
->>>>>>> 3712b2f6417744004533a766da84d48d31cc0511
-<<<<<<< HEAD
   window.location.href = 'login.html';
-=======
-  window.location.href = 'login.html';
->>>>>>> 39da51e (Correções e pequenas adições de melhorias na funcionalidade de perfil e histórico, além de ajustes no código para melhor organização e clareza.)
 }
 
 function togglePassword(inputId) {

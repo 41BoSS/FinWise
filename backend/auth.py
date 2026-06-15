@@ -33,10 +33,19 @@ def login():
     email = data.get('email')
     senha = data.get('senha')
 
-    if not email or not senha:
-        return jsonify({'message': 'Email e senha são obrigatórios'}), 400
+    print("\n========================")
+    print("EMAIL:", email)
 
     usuario = Usuario.query.filter_by(email=email).first()
+
+    print("USUARIO:", usuario)
+
+    if usuario:
+        print("HASH:", usuario.senha)
+        print("SENHA CONFERE?", usuario.check_password(senha))
+
+    print("========================\n")
+
     if not usuario or not usuario.check_password(senha):
         return jsonify({'message': 'Credenciais inválidas'}), 401
 
@@ -44,6 +53,11 @@ def login():
         'usuario_id': usuario.id,
         'exp': datetime.utcnow() + timedelta(hours=1)
     }
-    token = jwt.encode(payload, current_app.config['SECRET_KEY'], algorithm='HS256')
+
+    token = jwt.encode(
+        payload,
+        current_app.config['SECRET_KEY'],
+        algorithm='HS256'
+    )
 
     return jsonify({'token': token}), 200

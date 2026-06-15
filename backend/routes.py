@@ -32,26 +32,17 @@ def listar_transacoes():
     transacoes = Transacao.query.filter_by(usuario_id=request.usuario_id).order_by(Transacao.id.desc()).all()
     resultado = []
     for t in transacoes:
-        resultado.append({
-<<<<<<< HEAD
+     resultado.append({
     'id': t.id,
     'descricao': t.descricao,
     'valor': float(t.valor),
+    'tipo': t.tipo,
     'categoria': t.categoria.nome if t.categoria else None,
     'subcategoria': t.subcategoria,
     'recorrente': t.recorrente,
     'frequencia': t.frequencia,
     'data': t.data.strftime('%Y-%m-%d')
 })
-=======
-    'id': t.id,
-    'descricao': t.descricao,
-    'valor': float(t.valor),
-    'tipo': t.tipo,
-    'categoria': t.categoria.nome if t.categoria else None,
-    'data': t.data.strftime('%Y-%m-%d')
-})
->>>>>>> 39da51e (Correções e pequenas adições de melhorias na funcionalidade de perfil e histórico, além de ajustes no código para melhor organização e clareza.)
     return jsonify(resultado)
 
 @api.route('/transacoes', methods=['POST'])
@@ -65,7 +56,7 @@ def criar_transacao():
     data_str = dados.get('data')
     recorrente = dados.get('recorrente', False)
     frequencia = dados.get('frequencia', None)
-    data_vencimento_str = dados.get('data_vencimento', None)
+    data_vencimento_str = dados.get('data_vencimento')
 
     subcategoria = dados.get('subcategoria')
     recorrente = dados.get('recorrente', False)
@@ -84,25 +75,29 @@ def criar_transacao():
         data_transacao = datetime.strptime(data_str, '%Y-%m-%d').date()
     else:
         data_transacao = date.today()
+    if not data_vencimento_str:
+        data_vencimento = data_transacao
+    else:
+        data_vencimento = datetime.strptime(
+            data_vencimento_str,
+            '%Y-%m-%d'
+        ).date()
 
     transacao = Transacao(
-    descricao=descricao,
-    valor=float(valor),
-    tipo=tipo,
-    categoria_id=categoria.id,
-    usuario_id=request.usuario_id,
-    data=data_transacao,
-
-    subcategoria=subcategoria,
-    recorrente=recorrente,
-    frequencia=frequencia
-)
+        descricao=descricao,
+        valor=float(valor),
+        tipo=tipo,
+        categoria_id=categoria.id,
+        usuario_id=request.usuario_id,
+        data=data_transacao,
+        subcategoria=subcategoria,
+        recorrente=recorrente,
+        frequencia=frequencia
+    )
     db.session.add(transacao)
     db.session.commit()
 
-    if data_vencimento_str:
-        data_vencimento = datetime.strptime(data_vencimento_str, '%Y-%m-%d').date()
-
+    if recorrente:
         if recorrente and frequencia:
             frequencia_lower = frequencia.lower()
             if frequencia_lower == 'semanal':
@@ -196,14 +191,15 @@ def dashboard():
     ultimas_transacoes = Transacao.query.filter_by(usuario_id=request.usuario_id).order_by(Transacao.id.desc()).limit(5).all()
     ultimas = []
     for t in ultimas_transacoes:
-        ultimas.append({
-            'id': t.id,
-            'descricao': t.descricao,
-            'valor': float(t.valor),
-            'tipo': t.tipo,
-            'categoria': t.categoria.nome if t.categoria else None,
-            'data': t.data.strftime('%Y-%m-%d')
-        })
+     ultimas.append({
+        'id': t.id,
+        'descricao': t.descricao,
+        'valor': float(t.valor),
+        'tipo': t.tipo,
+        'categoria': t.categoria.nome if t.categoria else None,
+        'subcategoria': t.subcategoria,
+        'data': t.data.strftime('%Y-%m-%d')
+})
 
     agendamentos_alerta = Agendamento.query.filter(
         Agendamento.usuario_id == request.usuario_id,
@@ -237,6 +233,25 @@ def dashboard():
         'alertas_agenda': alertas
     })
 
+@api.route('/transacoes/<int:id>', methods=['GET'])
+@verificar_token
+def obter_transacao(id):
+    transacao = Transacao.query.filter_by(
+        id=id,
+        usuario_id=request.usuario_id
+    ).first()
+
+    if not transacao:
+        return jsonify({'erro': 'Transacao nao encontrada'}), 404
+
+    return jsonify({
+        'id': transacao.id,
+        'descricao': transacao.descricao,
+        'valor': float(transacao.valor),
+        'tipo': transacao.tipo,
+        'categoria': transacao.categoria.nome if transacao.categoria else None,
+        'data': transacao.data.strftime('%Y-%m-%d')
+    })
 @api.route('/transacoes/<int:id>', methods=['PUT'])
 @verificar_token
 def atualizar_transacao(id):
@@ -333,7 +348,6 @@ def grafico_barras():
             extract('year', Transacao.data) == ano
         ).scalar() or 0
 
-<<<<<<< HEAD
         investimentos = db.session.query(db.func.sum(Transacao.valor)).filter(
             Transacao.usuario_id == request.usuario_id,
             Transacao.tipo == 'despesa',
@@ -356,7 +370,6 @@ def grafico_barras():
         gastos_lista.append(float(despesas))
         investimentos_lista.append(float(investimentos))
         apostas_lista.append(float(apostas))
-=======
         investimentos = db.session.query(db.func.sum(Transacao.valor))\
     .join(Categoria, Transacao.categoria_id == Categoria.id)\
     .filter(
@@ -376,12 +389,6 @@ def grafico_barras():
         extract('month', Transacao.data) == mes,
         extract('year', Transacao.data) == ano
     ).scalar() or 0
-
-    receitas_lista.append(float(receitas))
-    gastos_lista.append(float(despesas))
-    investimentos_lista.append(float(investimentos))
-    apostas_lista.append(float(apostas))
->>>>>>> 39da51e (Correções e pequenas adições de melhorias na funcionalidade de perfil e histórico, além de ajustes no código para melhor organização e clareza.)
 
     return jsonify({
         'labels': labels,

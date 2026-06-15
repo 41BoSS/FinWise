@@ -55,19 +55,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const data = await response.json();
         if (response.ok) {
-<<<<<<< HEAD
           localStorage.setItem('token', data.token);
           alert('Login realizado!');
           window.location.href = '/';
         } else {
           alert(data.error || 'Erro no login.');
-=======
-        localStorage.setItem('token', data.token);
-        alert('Login realizado!');
-        window.location.href = '/frontend/dashboard.html';
-        } else {
-        alert(data.error || 'Erro no login.');
->>>>>>> 39da51e (Correções e pequenas adições de melhorias na funcionalidade de perfil e histórico, além de ajustes no código para melhor organização e clareza.)
         }
       } catch (error) {
         alert('Erro de conexão.');
@@ -79,11 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
       localStorage.removeItem('token');
-<<<<<<< HEAD
       window.location.href = '/login';
-=======
-      window.location.href = '/frontend/login.html';
->>>>>>> 39da51e (Correções e pequenas adições de melhorias na funcionalidade de perfil e histórico, além de ajustes no código para melhor organização e clareza.)
     });
   }
 });
