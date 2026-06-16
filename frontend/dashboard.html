@@ -30,11 +30,11 @@
     </li>
 
     <li>
-      <a href="#" data-view="agenda">
-        <i class="fas fa-calendar-alt"></i>
-        <span>Agenda</span>
-      </a>
-    </li>
+  <a href="#" data-view="agenda">
+    <i class="fas fa-calendar-alt"></i>
+    <span>Agenda</span>
+  </a>
+</li>
 
     <li>
       <a href="#" data-view="alertas">
@@ -42,6 +42,13 @@
         <span>Alertas</span>
       </a>
     </li>
+
+    <li>
+  <a href="#" data-view="relatorio">
+    <i class="fas fa-chart-line"></i>
+    <span>Relatório</span>
+  </a>
+</li>
 
     <li>
       <a href="#" data-view="perfil">
@@ -170,6 +177,81 @@
 </section>
 
 <section id="view-alertas" style="display:none;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+    <h2 style="font-size:26px; color:#333; font-weight:700;">Alertas</h2>
+    <button onclick="carregarAlertas()" title="Atualizar" style="background:none;border:none;cursor:pointer;color:#999;font-size:20px;">
+      <i class="fas fa-sync-alt"></i>
+    </button>
+  </div>
+
+  <div id="alerta-status-card" style="
+    background: linear-gradient(135deg, #e8f5e9, #f0faf4);
+    border: 1.5px solid #a5d6a7;
+    border-radius: 14px;
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+  ">
+    <div>
+      <div style="font-size:13px; color:#555; margin-bottom:4px;">Status Financeiro</div>
+      <div id="alerta-status-texto" style="font-size:22px; font-weight:800; color:#1b5e20; letter-spacing:1px;">—</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:13px; color:#555; margin-bottom:4px;">Saldo</div>
+      <div id="alerta-saldo-texto" style="font-size:20px; font-weight:700; color:#1b5e20;">—</div>
+    </div>
+  </div>
+
+  <div id="alertas-grupos"></div>
+
+  <div id="alertas-vazio" style="display:none; text-align:center; padding:60px 20px; color:#aaa;">
+    <i class="fas fa-check-circle" style="font-size:48px; color:#a5d6a7; margin-bottom:16px; display:block;"></i>
+    <div style="font-size:16px; font-weight:600; color:#555;">Tudo em dia!</div>
+    <div style="font-size:13px; margin-top:6px;">Nenhum alerta no momento.</div>
+  </div>
+</section>
+
+<section id="view-relatorio" style="display:none;">
+
+  <!-- Cabeçalho -->
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+    <h2 style="font-size:26px; color:#333; font-weight:700;">Relatório Financeiro</h2>
+    <button id="btn-exportar-pdf" style="
+      background:#279975; color:#fff; border:none; border-radius:10px;
+      padding:10px 20px; font-size:14px; font-weight:600; cursor:pointer;
+      display:flex; align-items:center; gap:8px;
+    ">
+      <i class="fas fa-file-pdf"></i> Exportar PDF
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div style="display:flex; gap:12px; margin-bottom:28px; flex-wrap:wrap;">
+    <select id="rel-periodo" style="padding:10px 14px; border-radius:10px; border:1px solid #ddd; font-size:14px; color:#333; background:#fff;">
+      <option value="mensal">Mensal</option>
+      <option value="anual">Anual</option>
+    </select>
+    <select id="rel-mes" style="padding:10px 14px; border-radius:10px; border:1px solid #ddd; font-size:14px; color:#333; background:#fff;">
+      <option value="1">Janeiro</option><option value="2">Fevereiro</option>
+      <option value="3">Março</option><option value="4">Abril</option>
+      <option value="5">Maio</option><option value="6">Junho</option>
+      <option value="7">Julho</option><option value="8">Agosto</option>
+      <option value="9">Setembro</option><option value="10">Outubro</option>
+      <option value="11">Novembro</option><option value="12">Dezembro</option>
+    </select>
+    <input id="rel-ano" type="number" value="2026" min="2020" max="2099"
+      style="padding:10px 14px; border-radius:10px; border:1px solid #ddd; font-size:14px; color:#333; width:100px;">
+    <button onclick="carregarRelatorio()" style="
+      background:#279975; color:#fff; border:none; border-radius:10px;
+      padding:10px 20px; font-size:14px; font-weight:600; cursor:pointer;
+    ">Gerar</button>
+  </div>
+
+  <!-- Conteúdo gerado dinamicamente -->
+  <div id="relatorio-conteudo"></div>
+
 </section>
 
 <section id="view-perfil" style="display:none;">
@@ -280,13 +362,26 @@
           <textarea class="form-textarea" id="input-descricao" placeholder="Adicione detalhes sobre esta transação..."></textarea>
         </div>
 
-<!-- Mini-janela Agenda (data de vencimento simples) -->
-<div id="agenda-detalhes" class="recorrente-detalhes" style="display: none;">
-  <div class="recorrente-badge">
-    <i class="fas fa-check-circle"></i>
-    Será adicionada à Agenda automaticamente
-  </div>
-</div>
+<!-- Lembrete único na Agenda (não recorrente) -->
+        <div class="recorrente-toggle">
+          <span>Adicionar à Agenda como lembrete único?</span>
+          <label class="switch">
+            <input type="checkbox" id="toggle-agenda">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div id="agenda-detalhes" class="recorrente-detalhes" style="display: none;">
+          <div class="form-group">
+            <label class="form-label">Data de vencimento</label>
+            <input type="text" class="form-input" id="input-vencimento-agenda" placeholder="dd/mm/aaaa">
+          </div>
+          <div class="recorrente-badge">
+            <i class="fas fa-check-circle"></i>
+            Será adicionada à Agenda automaticamente
+          </div>
+        </div>
+
         <!-- Despesa Recorrente -->
         <div class="recorrente-toggle">
           <span>É uma transação recorrente?</span>

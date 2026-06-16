@@ -151,6 +151,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+
     // =========================================================
     // 5. CARREGAR GRÁFICOS
     // =========================================================
@@ -334,6 +335,353 @@ item.innerHTML = `
         }
     }
 
+    async function carregarRelatorio() {
+    const hoje = new Date();
+    const selMes = document.getElementById('rel-mes');
+    const inpAno = document.getElementById('rel-ano');
+    if (selMes && !selMes.dataset.preenchido) { selMes.value = hoje.getMonth() + 1; selMes.dataset.preenchido = '1'; }
+    if (inpAno && !inpAno.dataset.preenchido) { inpAno.value = hoje.getFullYear(); inpAno.dataset.preenchido = '1'; }
+    const conteudo = document.getElementById('relatorio-conteudo');
+    if (!conteudo) return;
+    conteudo.innerHTML = '<div style="color:#aaa;padding:40px;text-align:center;">Carregando relatório...</div>';
+
+    const periodo = document.getElementById('rel-periodo').value;
+    const mes     = document.getElementById('rel-mes').value;
+    const ano     = document.getElementById('rel-ano').value;
+
+    try {
+        const res  = await fetch(`http://localhost:5000/api/relatorio?periodo=${periodo}&mes=${mes}&ano=${ano}`,
+            { headers: { 'Authorization': 'Bearer ' + token } });
+        const data = await res.json();
+
+        const fmtVal = v => 'R$ ' + parseFloat(v).toFixed(2).replace('.', ',');
+
+        // Cor da saúde
+        const corSaude = data.saude >= 70 ? '#279975' : data.saude >= 40 ? '#f57f17' : '#c62828';
+        const textoSaude = data.saude >= 70 ? 'SAUDÁVEL' : data.saude >= 40 ? 'ATENÇÃO' : 'CRÍTICO';
+
+        // Cores para gráfico empilhado
+        const paleta = ['#279975','#f57f17','#c62828','#1565c0','#6a1b9a','#2e7d32','#ad1457','#00838f','#e65100','#4e342e'];
+
+        conteudo.innerHTML = `
+
+          <!-- RESUMO EXECUTIVO -->
+          <div style="background:#fff;border-radius:16px;padding:28px;box-shadow:0 2px 8px rgba(0,0,0,0.07);margin-bottom:24px;">
+            <h3 style="font-size:16px;font-weight:700;color:#333;margin-bottom:20px;">
+              <i class="fas fa-chart-pie" style="color:#279975;margin-right:8px;"></i>Resumo Executivo
+            </h3>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:20px;">
+              <div style="background:#f0faf4;border-radius:12px;padding:16px;text-align:center;">
+                <div style="font-size:12px;color:#555;margin-bottom:6px;">Saúde Financeira</div>
+                <div style="font-size:28px;font-weight:800;color:${corSaude};">${data.saude}</div>
+                <div style="font-size:11px;font-weight:700;color:${corSaude};">${textoSaude}</div>
+              </div>
+              <div style="background:#e8f5e9;border-radius:12px;padding:16px;text-align:center;">
+                <div style="font-size:12px;color:#555;margin-bottom:6px;">Receitas</div>
+                <div style="font-size:20px;font-weight:700;color:#2e7d32;">${fmtVal(data.totais.receitas)}</div>
+              </div>
+              <div style="background:#ffebee;border-radius:12px;padding:16px;text-align:center;">
+                <div style="font-size:12px;color:#555;margin-bottom:6px;">Despesas</div>
+                <div style="font-size:20px;font-weight:700;color:#c62828;">${fmtVal(data.totais.despesas)}</div>
+              </div>
+              <div style="background:#f3f4f6;border-radius:12px;padding:16px;text-align:center;">
+                <div style="font-size:12px;color:#555;margin-bottom:6px;">Saldo</div>
+                <div style="font-size:20px;font-weight:700;color:${data.totais.saldo >= 0 ? '#2e7d32' : '#c62828'};">${fmtVal(data.totais.saldo)}</div>
+              </div>
+            </div>
+            <div style="background:#f9f9f9;border-radius:10px;padding:16px;font-size:14px;color:#444;line-height:1.7;">
+              <i class="fas fa-robot" style="color:#279975;margin-right:6px;"></i>
+              ${data.paragrafo}
+            </div>
+          </div>
+
+          <!-- GRÁFICOS LINHA E DONUT -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
+            <div style="background:#fff;border-radius:16px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.07);">
+              <h3 style="font-size:15px;font-weight:700;color:#333;margin-bottom:16px;">
+                <i class="fas fa-heart-pulse" style="color:#279975;margin-right:8px;"></i>Evolução da Saúde
+              </h3>
+              <canvas id="grafico-linha-saude" height="200"></canvas>
+            </div>
+            <div style="background:#fff;border-radius:16px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.07);">
+              <h3 style="font-size:15px;font-weight:700;color:#333;margin-bottom:16px;">
+                <i class="fas fa-circle-nodes" style="color:#279975;margin-right:8px;"></i>Gastos por Categoria
+              </h3>
+              <canvas id="grafico-donut-rel" height="200"></canvas>
+            </div>
+          </div>
+
+          <!-- GRÁFICO BARRAS EMPILHADAS -->
+          <div style="background:#fff;border-radius:16px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.07);margin-bottom:24px;">
+            <h3 style="font-size:15px;font-weight:700;color:#333;margin-bottom:16px;">
+              <i class="fas fa-chart-bar" style="color:#279975;margin-right:8px;"></i>Categorias Mês a Mês
+            </h3>
+            <canvas id="grafico-empilhado" height="120"></canvas>
+          </div>
+
+          <!-- ANÁLISE POR CATEGORIA -->
+          <div style="background:#fff;border-radius:16px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.07);margin-bottom:24px;">
+            <h3 style="font-size:15px;font-weight:700;color:#333;margin-bottom:20px;">
+              <i class="fas fa-magnifying-glass-chart" style="color:#279975;margin-right:8px;"></i>Análise por Categoria
+            </h3>
+            <div id="rel-categorias"></div>
+          </div>
+
+          <!-- EVENTOS RELEVANTES -->
+          <div style="background:#fff;border-radius:16px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.07);margin-bottom:24px;">
+            <h3 style="font-size:15px;font-weight:700;color:#333;margin-bottom:20px;">
+              <i class="fas fa-timeline" style="color:#279975;margin-right:8px;"></i>Eventos Relevantes
+            </h3>
+            <div id="rel-eventos"></div>
+          </div>
+        `;
+
+        // ── Gráfico linha saúde ──────────────────────────────
+        const ctxLinha = document.getElementById('grafico-linha-saude').getContext('2d');
+        new Chart(ctxLinha, {
+            type: 'line',
+            data: {
+                labels: data.historico_saude.map(h => h.label),
+                datasets: [{
+                    label: 'Saúde Financeira',
+                    data: data.historico_saude.map(h => h.saude),
+                    borderColor: '#279975',
+                    backgroundColor: 'rgba(39,153,117,0.1)',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#279975',
+                    pointRadius: 5,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { min: 0, max: 100, ticks: { callback: v => v + '%' } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // ── Gráfico donut categorias ──────────────────────────
+        const cats    = data.analise_categorias.map(c => c.categoria);
+        const totais  = data.analise_categorias.map(c => c.total);
+        const ctxDonut = document.getElementById('grafico-donut-rel').getContext('2d');
+        new Chart(ctxDonut, {
+            type: 'doughnut',
+            data: {
+                labels: cats,
+                datasets: [{ data: totais, backgroundColor: paleta.slice(0, cats.length), borderWidth: 2 }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'right', labels: { font: { size: 11 } } } }
+            }
+        });
+
+        // ── Gráfico barras empilhadas ─────────────────────────
+        const empilhado = data.categorias_empilhadas;
+        const dsEmpilhado = Object.entries(empilhado.datasets).map(([nome, valores], i) => ({
+            label: nome,
+            data: valores,
+            backgroundColor: paleta[i % paleta.length]
+        }));
+        const ctxEmp = document.getElementById('grafico-empilhado').getContext('2d');
+        new Chart(ctxEmp, {
+            type: 'bar',
+            data: { labels: empilhado.labels, datasets: dsEmpilhado },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { stacked: true },
+                    y: { stacked: true, ticks: { callback: v => 'R$' + v } }
+                },
+                plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } }
+            }
+        });
+
+        // ── Análise por categoria ─────────────────────────────
+        const divCats = document.getElementById('rel-categorias');
+        if (data.analise_categorias.length === 0) {
+            divCats.innerHTML = '<div style="color:#aaa;font-size:14px;">Nenhuma despesa no período.</div>';
+        } else {
+            data.analise_categorias.forEach(c => {
+                const cor   = c.status === 'acima' ? '#c62828' : c.status === 'abaixo' ? '#2e7d32' : '#555';
+                const bg    = c.status === 'acima' ? '#ffebee' : c.status === 'abaixo' ? '#e8f5e9' : '#f9f9f9';
+                const icone = c.status === 'acima' ? 'fa-arrow-trend-up' : c.status === 'abaixo' ? 'fa-arrow-trend-down' : 'fa-minus';
+                const desvioTexto = c.desvio !== null
+                    ? (c.desvio > 0 ? `+${c.desvio}% acima da média` : `${c.desvio}% abaixo da média`)
+                    : 'Sem histórico para comparar';
+                const frase = c.status === 'acima'
+                    ? `Você gastou ${c.desvio}% a mais que o habitual em ${c.categoria}. Média histórica: ${fmtVal(c.media)}.`
+                    : c.status === 'abaixo'
+                    ? `Ótimo! Você economizou em ${c.categoria} ficando ${Math.abs(c.desvio)}% abaixo da média de ${fmtVal(c.media)}.`
+                    : `Gasto dentro do padrão habitual.`;
+
+                divCats.innerHTML += `
+                  <div style="background:${bg};border-radius:12px;padding:16px 20px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                      <i class="fas ${icone}" style="color:${cor};font-size:18px;"></i>
+                      <div>
+                        <div style="font-size:14px;font-weight:700;color:#333;">${c.categoria}</div>
+                        <div style="font-size:12px;color:#666;margin-top:3px;">${frase}</div>
+                      </div>
+                    </div>
+                    <div style="text-align:right;flex-shrink:0;">
+                      <div style="font-size:16px;font-weight:700;color:${cor};">${fmtVal(c.total)}</div>
+                      <div style="font-size:11px;color:#888;margin-top:2px;">${desvioTexto}</div>
+                    </div>
+                  </div>
+                `;
+            });
+        }
+
+        // ── Eventos relevantes ────────────────────────────────
+        const divEventos = document.getElementById('rel-eventos');
+        if (data.eventos.length === 0) {
+            divEventos.innerHTML = '<div style="color:#aaa;font-size:14px;">Nenhum evento relevante no período.</div>';
+        } else {
+            data.eventos.forEach(e => {
+                const cor   = e.impacto === 'positivo' ? '#2e7d32' : '#c62828';
+                const bg    = e.impacto === 'positivo' ? '#e8f5e9'  : '#ffebee';
+                const icone = e.tipo === 'receita' ? 'fa-circle-arrow-up'
+                            : e.tipo === 'acima_media' ? 'fa-triangle-exclamation'
+                            : 'fa-circle-arrow-down';
+                const desvioTag = e.desvio ? `<span style="background:${cor};color:#fff;font-size:10px;padding:2px 7px;border-radius:20px;margin-left:8px;">+${e.desvio}%</span>` : '';
+
+                divEventos.innerHTML += `
+                  <div style="background:${bg};border-radius:12px;padding:14px 18px;margin-bottom:10px;display:flex;align-items:center;gap:14px;">
+                    <i class="fas ${icone}" style="color:${cor};font-size:20px;flex-shrink:0;"></i>
+                    <div style="flex:1;">
+                      <div style="font-size:14px;font-weight:600;color:#333;">${e.descricao}${desvioTag}</div>
+                      <div style="font-size:12px;color:#777;margin-top:3px;">${e.categoria} • ${e.data}</div>
+                    </div>
+                    <div style="font-size:15px;font-weight:700;color:${cor};flex-shrink:0;">${fmtVal(e.valor)}</div>
+                  </div>
+                `;
+            });
+        }
+
+        // ── Exportar PDF ──────────────────────────────────────
+        document.getElementById('btn-exportar-pdf').onclick = () => exportarRelatorioPDF(data, periodo, mes, ano);
+
+    } catch (err) {
+        console.error('Erro ao carregar relatório:', err);
+        conteudo.innerHTML = '<div style="color:#e74c3c;padding:40px;text-align:center;">Erro ao carregar relatório.</div>';
+    }
+}
+
+function exportarRelatorioPDF(data, periodo, mes, ano) {
+    const mesesNomes = {1:'Janeiro',2:'Fevereiro',3:'Março',4:'Abril',5:'Maio',6:'Junho',
+                        7:'Julho',8:'Agosto',9:'Setembro',10:'Outubro',11:'Novembro',12:'Dezembro'};
+    const fmtVal = v => 'R$ ' + parseFloat(v).toFixed(2).replace('.', ',');
+    const corSaude = data.saude >= 70 ? '#279975' : data.saude >= 40 ? '#f57f17' : '#c62828';
+    const textoSaude = data.saude >= 70 ? 'SAUDÁVEL' : data.saude >= 40 ? 'ATENÇÃO' : 'CRÍTICO';
+    const titulo = periodo === 'anual' ? `Relatório Anual — ${ano}` : `Relatório de ${mesesNomes[mes]} de ${ano}`;
+
+    const catsHTML = data.analise_categorias.map(c => {
+        const cor = c.status === 'acima' ? '#c62828' : c.status === 'abaixo' ? '#2e7d32' : '#555';
+        const desvio = c.desvio !== null ? (c.desvio > 0 ? `+${c.desvio}%` : `${c.desvio}%`) : '—';
+        return `
+          <tr>
+            <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;">${c.categoria}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;text-align:right;">${fmtVal(c.total)}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;text-align:right;">${c.media > 0 ? fmtVal(c.media) : '—'}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;text-align:right;color:${cor};font-weight:600;">${desvio}</td>
+          </tr>`;
+    }).join('');
+
+    const eventosHTML = data.eventos.map(e => {
+        const cor = e.impacto === 'positivo' ? '#2e7d32' : '#c62828';
+        return `
+          <tr>
+            <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;">${e.descricao}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;">${e.categoria}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;">${e.data}</td>
+            <td style="padding:10px 12px;border-bottom:1px solid #f0f0f0;text-align:right;color:${cor};font-weight:600;">${fmtVal(e.valor)}</td>
+          </tr>`;
+    }).join('');
+
+    const htmlPDF = `
+      <!DOCTYPE html><html lang="pt-BR"><head>
+      <meta charset="UTF-8">
+      <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Segoe UI',sans-serif; color:#333; padding:40px; }
+        .header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:32px; border-bottom:3px solid #279975; padding-bottom:20px; }
+        .logo { font-size:28px; font-weight:800; color:#279975; }
+        .logo span { display:block; font-size:12px; color:#999; font-weight:400; }
+        .titulo { font-size:20px; font-weight:700; color:#333; text-align:right; }
+        .cards { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
+        .card { border-radius:12px; padding:16px; text-align:center; }
+        .card .label { font-size:11px; color:#666; margin-bottom:6px; }
+        .card .valor { font-size:20px; font-weight:800; }
+        .secao { margin-bottom:28px; }
+        .secao h2 { font-size:15px; font-weight:700; color:#333; margin-bottom:14px; padding-bottom:6px; border-bottom:2px solid #f0f0f0; }
+        .paragrafo { background:#f9f9f9; border-left:4px solid #279975; border-radius:6px; padding:14px 16px; font-size:13px; color:#444; line-height:1.7; margin-bottom:28px; }
+        table { width:100%; border-collapse:collapse; font-size:13px; }
+        th { background:#f5f5f5; padding:10px 12px; text-align:left; font-weight:600; color:#555; }
+        th:last-child, td:last-child { text-align:right; }
+        .rodape { margin-top:40px; text-align:center; font-size:11px; color:#aaa; border-top:1px solid #eee; padding-top:16px; }
+      </style>
+      </head><body>
+        <div class="header">
+          <div class="logo">FinWise<span>Finanças inteligentes</span></div>
+          <div class="titulo">${titulo}<br><span style="font-size:13px;color:#999;font-weight:400;">Gerado em ${new Date().toLocaleDateString('pt-BR')}</span></div>
+        </div>
+
+        <div class="cards">
+          <div class="card" style="background:#f0faf4;">
+            <div class="label">Saúde Financeira</div>
+            <div class="valor" style="color:${corSaude};">${data.saude}/100</div>
+            <div style="font-size:11px;font-weight:700;color:${corSaude};">${textoSaude}</div>
+          </div>
+          <div class="card" style="background:#e8f5e9;">
+            <div class="label">Receitas</div>
+            <div class="valor" style="color:#2e7d32;">${fmtVal(data.totais.receitas)}</div>
+          </div>
+          <div class="card" style="background:#ffebee;">
+            <div class="label">Despesas</div>
+            <div class="valor" style="color:#c62828;">${fmtVal(data.totais.despesas)}</div>
+          </div>
+          <div class="card" style="background:#f3f4f6;">
+            <div class="label">Saldo</div>
+            <div class="valor" style="color:${data.totais.saldo >= 0 ? '#2e7d32' : '#c62828'};">${fmtVal(data.totais.saldo)}</div>
+          </div>
+        </div>
+
+        <div class="paragrafo">${data.paragrafo}</div>
+
+        <div class="secao">
+          <h2>Análise por Categoria</h2>
+          <table>
+            <tr>
+              <th>Categoria</th><th style="text-align:right;">Total</th>
+              <th style="text-align:right;">Média Histórica</th><th style="text-align:right;">Desvio</th>
+            </tr>
+            ${catsHTML}
+          </table>
+        </div>
+
+        <div class="secao">
+          <h2>Eventos Relevantes</h2>
+          <table>
+            <tr><th>Descrição</th><th>Categoria</th><th>Data</th><th style="text-align:right;">Valor</th></tr>
+            ${eventosHTML}
+          </table>
+        </div>
+
+        <div class="rodape">FinWise — Relatório gerado automaticamente • ${data.nome_usuario}</div>
+      </body></html>
+    `;
+
+    const janela = window.open('', '_blank');
+    janela.document.write(htmlPDF);
+    janela.document.close();
+    janela.focus();
+    setTimeout(() => janela.print(), 800);
+}
+
     // =========================================================
     // 8. CARREGAR NOTIFICAÇÕES (dentro do DOMContentLoaded
     //    para ter acesso ao token)
@@ -420,6 +768,172 @@ item.innerHTML = `
             console.error('Erro ao excluir transação:', err);
         }
     }
+
+    async function carregarAlertas() {
+    const grupos = document.getElementById('alertas-grupos');
+    const vazio  = document.getElementById('alertas-vazio');
+    if (!grupos) return;
+
+    grupos.innerHTML = '<div style="color:#aaa;padding:20px;">Carregando...</div>';
+    vazio.style.display = 'none';
+
+    try {
+        const [resAlertas, resDash, resGastos] = await Promise.all([
+            fetch('http://localhost:5000/api/agenda/alertas',          { headers: { 'Authorization': 'Bearer ' + token } }),
+            fetch('http://localhost:5000/api/dashboard',               { headers: { 'Authorization': 'Bearer ' + token } }),
+            fetch('http://localhost:5000/api/alertas/gastos-excessivos', { headers: { 'Authorization': 'Bearer ' + token } })
+        ]);
+
+        const dataAlertas = await resAlertas.json();
+        const dataDash    = await resDash.json();
+        const dataGastos  = await resGastos.json();
+
+        // Card de status financeiro
+        const saude = dataDash.saude_financeira || 0;
+        const saldo = dataDash.totais?.saldo ?? 0;
+        const statusEl = document.getElementById('alerta-status-texto');
+        const saldoEl  = document.getElementById('alerta-saldo-texto');
+        const cardEl   = document.getElementById('alerta-status-card');
+
+        let statusTexto, statusCor, cardBg, cardBorder;
+        if (saude >= 70) {
+            statusTexto = 'SAUDÁVEL'; statusCor = '#1b5e20';
+            cardBg = 'linear-gradient(135deg,#e8f5e9,#f0faf4)'; cardBorder = '#a5d6a7';
+        } else if (saude >= 40) {
+            statusTexto = 'ATENÇÃO'; statusCor = '#e65100';
+            cardBg = 'linear-gradient(135deg,#fff8e1,#fffde7)'; cardBorder = '#ffcc02';
+        } else {
+            statusTexto = 'CRÍTICO'; statusCor = '#b71c1c';
+            cardBg = 'linear-gradient(135deg,#ffebee,#fff0f0)'; cardBorder = '#ef9a9a';
+        }
+        if (statusEl) { statusEl.textContent = statusTexto; statusEl.style.color = statusCor; }
+        if (saldoEl)  { saldoEl.textContent  = 'R$ ' + saldo.toFixed(2).replace('.', ','); saldoEl.style.color = statusCor; }
+        if (cardEl)   { cardEl.style.background = cardBg; cardEl.style.borderColor = cardBorder; }
+
+        // Monta grupos
+        const secoes = [];
+        const todosAlertas = dataAlertas.alertas || [];
+
+        // Vence hoje
+        const venceHoje = todosAlertas.filter(a => {
+            const hoje = new Date(); hoje.setHours(0,0,0,0);
+            const venc = new Date(a.data_vencimento + 'T00:00:00');
+            return venc.getTime() === hoje.getTime() && a.status !== 'pago';
+        });
+        if (venceHoje.length > 0) {
+            secoes.push({
+                titulo: 'Vence Hoje', cor: '#e65100', bg: '#fff8e1', borda: '#ffe082',
+                items: venceHoje.map(a => ({
+                    icone: 'fa-calendar-day',
+                    texto: `${a.descricao} vence hoje — R$ ${parseFloat(a.valor).toFixed(2).replace('.', ',')}`,
+                    data:  a.data_vencimento.split('-').reverse().join('/')
+                }))
+            });
+        }
+
+        // Vencimento próximo (1–3 dias)
+        const proximos = todosAlertas.filter(a => {
+            const hoje = new Date(); hoje.setHours(0,0,0,0);
+            const venc = new Date(a.data_vencimento + 'T00:00:00');
+            const diff = Math.round((venc - hoje) / (1000*60*60*24));
+            return diff > 0 && diff <= 3 && a.status !== 'pago';
+        });
+        if (proximos.length > 0) {
+            secoes.push({
+                titulo: 'Vencimento Próximo', cor: '#f57f17', bg: '#fff8e1', borda: '#ffe082',
+                items: proximos.map(a => {
+                    const hoje = new Date(); hoje.setHours(0,0,0,0);
+                    const venc = new Date(a.data_vencimento + 'T00:00:00');
+                    const diff = Math.round((venc - hoje) / (1000*60*60*24));
+                    return {
+                        icone: 'fa-clock',
+                        texto: `${a.descricao} vence em ${diff} dia${diff > 1 ? 's' : ''} — R$ ${parseFloat(a.valor).toFixed(2).replace('.', ',')}`,
+                        data:  a.data_vencimento.split('-').reverse().join('/')
+                    };
+                })
+            });
+        }
+
+        // Vencidos
+        const vencidos = todosAlertas.filter(a => {
+            const hoje = new Date(); hoje.setHours(0,0,0,0);
+            const venc = new Date(a.data_vencimento + 'T00:00:00');
+            return venc < hoje && a.status !== 'pago';
+        });
+        if (vencidos.length > 0) {
+            secoes.push({
+                titulo: 'Vencido', cor: '#c62828', bg: '#ffebee', borda: '#ef9a9a',
+                items: vencidos.map(a => {
+                    const hoje = new Date(); hoje.setHours(0,0,0,0);
+                    const venc = new Date(a.data_vencimento + 'T00:00:00');
+                    const dias = Math.abs(Math.round((venc - hoje) / (1000*60*60*24)));
+                    return {
+                        icone: 'fa-exclamation-circle',
+                        texto: `${a.descricao} venceu há ${dias} dia${dias > 1 ? 's' : ''} — R$ ${parseFloat(a.valor).toFixed(2).replace('.', ',')}`,
+                        data:  a.data_vencimento.split('-').reverse().join('/')
+                    };
+                })
+            });
+        }
+
+        // Gasto excessivo
+        if (dataGastos.length > 0) {
+            secoes.push({
+                titulo: 'Gasto Excessivo', cor: '#4a148c', bg: '#f3e5f5', borda: '#ce93d8',
+                items: dataGastos.map(g => ({
+                    icone: 'fa-arrow-trend-up',
+                    texto: `Gastos com ${g.categoria} acima da média (${g.percentual_acima}% a mais)`,
+                    data:  new Date().toLocaleDateString('pt-BR')
+                }))
+            });
+        }
+
+        // Renderiza
+        grupos.innerHTML = '';
+        if (secoes.length === 0) {
+            vazio.style.display = 'block';
+            return;
+        }
+
+        secoes.forEach(s => {
+            const secDiv = document.createElement('div');
+            secDiv.style.marginBottom = '28px';
+
+            const titulo = document.createElement('div');
+            titulo.textContent = s.titulo;
+            titulo.style.cssText = 'font-size:15px;font-weight:700;color:#333;margin-bottom:12px;';
+            secDiv.appendChild(titulo);
+
+            s.items.forEach(item => {
+                const card = document.createElement('div');
+                card.style.cssText = `
+                    background:${s.bg};
+                    border:1px solid ${s.borda};
+                    border-radius:12px;
+                    padding:16px 18px;
+                    margin-bottom:10px;
+                    display:flex;
+                    align-items:flex-start;
+                    gap:14px;
+                `;
+                card.innerHTML = `
+                    <i class="fas ${item.icone}" style="color:${s.cor};font-size:18px;margin-top:2px;flex-shrink:0;"></i>
+                    <div>
+                        <div style="font-size:14px;font-weight:600;color:#333;">${item.texto}</div>
+                        <div style="font-size:12px;color:#888;margin-top:4px;">${item.data}</div>
+                    </div>
+                `;
+                secDiv.appendChild(card);
+            });
+
+            grupos.appendChild(secDiv);
+        });
+
+    } catch (err) {
+        console.error('Erro ao carregar alertas:', err);
+        grupos.innerHTML = '<div style="color:#e74c3c;padding:20px;">Erro ao carregar alertas.</div>';
+    }
+}
 
     // =========================================================
     // 10. MODAL DE CONFIRMAÇÃO GENÉRICO
@@ -579,6 +1093,11 @@ inputData.value = `${dia}/${mes}/${ano}`;
                 const sel = document.getElementById('select-frequencia');
                 if (sel) sel.value = 'Mensal';
                 if (inputVencimento) inputVencimento.value = '';
+            } else if (toggleAgenda && toggleAgenda.checked) {
+                // Desativa lembrete único se marcar recorrente
+                toggleAgenda.checked = false;
+                document.getElementById('agenda-detalhes').style.display = 'none';
+                if (inputVencAgenda) inputVencAgenda.value = '';
             }
         });
     }
@@ -589,6 +1108,14 @@ inputData.value = `${dia}/${mes}/${ano}`;
             const det = document.getElementById('agenda-detalhes');
             if (det) det.style.display = this.checked ? 'block' : 'none';
             if (!this.checked && inputVencAgenda) inputVencAgenda.value = '';
+            else if (this.checked && toggleRecorrente && toggleRecorrente.checked) {
+                // Desativa recorrente se marcar lembrete único
+                toggleRecorrente.checked = false;
+                recorrenteDetalhes.style.display = 'none';
+                const sel = document.getElementById('select-frequencia');
+                if (sel) sel.value = 'Mensal';
+                if (inputVencimento) inputVencimento.value = '';
+            }
         });
     }
 
@@ -605,6 +1132,10 @@ inputData.value = `${dia}/${mes}/${ano}`;
         if (!valor || valor <= 0)             { alert('Informe um valor válido.');           return; }
         if (!dataRaw || dataRaw.length < 10)  { alert('Informe uma data válida.');           return; }
         if (!categoriaSelecionada)            { alert('Selecione uma categoria.');           return; }
+        if (toggleAgenda && toggleAgenda.checked && (!inputVencAgenda || inputVencAgenda.value.length < 10)) {
+            alert('Informe a data de vencimento do lembrete.');
+            return;
+        }
 
         const subcatSelect = document.getElementById('select-subcategoria').value;
         const subcatCustom = (document.getElementById('input-subcategoria-personalizada')?.value || '').trim();
@@ -707,8 +1238,21 @@ if (toggleRecorrente && toggleRecorrente.checked) {
     return;
 }
 
+if (view === 'relatorio') {
+    document.querySelectorAll('[id^="view-"]').forEach(sec => sec.style.display = 'none');
+    document.getElementById('view-relatorio').style.display = 'block';
+    document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
+    this.closest('li').classList.add('active');
+    carregarRelatorio();
+    return;
+}
+
 if (view === 'alertas') {
-    window.location.href = 'agenda.html';
+    document.querySelectorAll('[id^="view-"]').forEach(sec => sec.style.display = 'none');
+    document.getElementById('view-alertas').style.display = 'block';
+    document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
+    this.closest('li').classList.add('active');
+    carregarAlertas();
     return;
 }
 
@@ -796,5 +1340,13 @@ if (view === 'alertas') {
     // 24. INICIAR — chamada única, sempre a última linha
     // =========================================================
     carregarDashboard();
+
+    // Abre a view indicada pela URL (?view=perfil, ?view=historico, etc.)
+    const params = new URLSearchParams(window.location.search);
+    const viewInicial = params.get('view');
+    if (viewInicial && viewInicial !== 'inicio') {
+        const linkView = document.querySelector(`[data-view="${viewInicial}"]`);
+        if (linkView) linkView.click();
+    }
 
 }); // fim DOMContentLoaded

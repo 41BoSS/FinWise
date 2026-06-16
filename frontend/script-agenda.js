@@ -200,8 +200,8 @@ div.className = ['conta-card', a.tipo === 'receita' ? 'receita' : '', classeCard
             <div class="conta-info">
                 <i class="fas fa-sync-alt conta-icone"></i>
                 <div>
-                    <div class="conta-desc">${a.descricao}</div>
-                    <div class="conta-meta">${recorrenteLabel}${a.categoria || 'Despesa'} • ${dataFormatada}</div>
+                    <div class="conta-desc">${a.descricao && a.descricao !== 'Sem descrição' ? a.descricao : (a.categoria || 'Despesa')}</div>
+                    <div class="conta-meta">${recorrenteLabel}${a.descricao && a.descricao !== 'Sem descrição' ? (a.categoria || 'Despesa') : ''}${a.descricao && a.descricao !== 'Sem descrição' && a.categoria ? ' • ' : ''}${dataFormatada}</div>
                 </div>
             </div>
             <div style="display:flex;align-items:center;gap:10px;">
@@ -258,11 +258,7 @@ document.getElementById('btn-mes-proximo').addEventListener('click', () => {
     carregarAgenda();
 });
 
-// Logout
-document.getElementById('btn-logout').addEventListener('click', () => {
-    localStorage.removeItem('token');
-    window.location.href = 'login.html';
-});
+
 
 // Iniciar
 carregarAgenda();
