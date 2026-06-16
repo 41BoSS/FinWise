@@ -432,7 +432,18 @@ def marcar_pago(id):
     db.session.commit()
 
     if agendamento.recorrente and agendamento.frequencia:
-        proxima_data = calcular_proxima_data(agendamento.data_vencimento, agendamento.frequencia)
+     proxima_data = calcular_proxima_data(agendamento.data_vencimento, agendamento.frequencia)
+
+    ja_existe = Agendamento.query.filter_by(
+        usuario_id=agendamento.usuario_id,
+        descricao=agendamento.descricao,
+        valor=agendamento.valor,
+        frequencia=agendamento.frequencia,
+        data_vencimento=proxima_data,
+        status='a_vencer'
+    ).first()
+
+    if not ja_existe:
         novo = Agendamento(
             usuario_id=agendamento.usuario_id,
             descricao=agendamento.descricao,
@@ -479,6 +490,297 @@ def alertas_agenda():
         'alertas': resultado
     })
 
+@api.route('/alertas/gastos-excessivos', methods=['GET'])
+@verificar_token
+def gastos_excessivos():
+    """Detecta categorias com gasto acima da média dos últimos 3 meses."""
+    from sqlalchemy import extract
+    hoje = date.today()
+
+    resultado = []
+    mes_atual = {}
+    transacoes_mes = Transacao.query.filter(
+        Transacao.usuario_id == request.usuario_id,
+        Transacao.tipo == 'despesa',
+        extract('month', Transacao.data) == hoje.month,
+        extract('year', Transacao.data) == hoje.year
+    ).all()
+    for t in transacoes_mes:
+        cat = t.categoria.nome if t.categoria else 'Sem categoria'
+        mes_atual[cat] = mes_atual.get(cat, 0) + t.valor
+
+    for cat_nome, total_atual in mes_atual.items():
+        historico = []
+        for i in range(1, 4):
+            m = hoje.month - i
+            a = hoje.year
+            while m <= 0:
+                m += 12
+                a -= 1
+            soma = db.session.query(db.func.sum(Transacao.valor)).join(
+                Categoria, Transacao.categoria_id == Categoria.id
+            ).filter(
+                Transacao.usuario_id == request.usuario_id,
+                Transacao.tipo == 'despesa',
+                Categoria.nome == cat_nome,
+                extract('month', Transacao.data) == m,
+                extract('year', Transacao.data) == a
+            ).scalar() or 0
+            historico.append(float(soma))
+
+        meses_com_gasto = [v for v in historico if v > 0]
+        if not meses_com_gasto:
+            continue
+
+        media = sum(meses_com_gasto) / len(meses_com_gasto)
+        if media > 0 and total_atual > media * 1.2:
+            resultado.append({
+                'categoria': cat_nome,
+                'total_atual': round(float(total_atual), 2),
+                'media': round(media, 2),
+                'percentual_acima': round(((total_atual / media) - 1) * 100, 1),
+                'data': hoje.strftime('%Y-%m-%d')
+            })
+
+    return jsonify(resultado)
+
+@api.route('/relatorio', methods=['GET'])
+@verificar_token
+def relatorio():
+    from sqlalchemy import extract
+    import calendar
+
+    periodo = request.args.get('periodo', 'mensal')  # mensal ou anual
+    mes     = request.args.get('mes',  type=int, default=date.today().month)
+    ano     = request.args.get('ano',  type=int, default=date.today().year)
+
+    usuario = Usuario.query.get(request.usuario_id)
+
+    # ── Definir intervalo ──────────────────────────────────────
+    if periodo == 'anual':
+        transacoes_periodo = Transacao.query.filter(
+            Transacao.usuario_id == request.usuario_id,
+            extract('year', Transacao.data) == ano
+        ).all()
+    else:
+        transacoes_periodo = Transacao.query.filter(
+            Transacao.usuario_id == request.usuario_id,
+            extract('month', Transacao.data) == mes,
+            extract('year',  Transacao.data) == ano
+        ).all()
+
+    receitas  = sum(t.valor for t in transacoes_periodo if t.tipo == 'receita')
+    despesas  = sum(t.valor for t in transacoes_periodo if t.tipo == 'despesa')
+    saldo     = receitas - despesas
+
+    # ── Saúde financeira do período ───────────────────────────
+    def calc_saude(rec, desp):
+        if rec == 0 and desp > 0: return 0
+        if rec == 0 and desp == 0: return 100
+        ratio = desp / rec
+        if ratio <= 0.5:  return 100
+        if ratio <= 1.0:  return int(100 - ((ratio - 0.5) / 0.5) * 50)
+        if ratio <= 2.0:  return int(50  - ((ratio - 1.0) / 1.0) * 50)
+        return 0
+
+    saude = calc_saude(receitas, despesas)
+
+    # ── Saúde dos últimos 6 meses (gráfico de linha) ──────────
+    historico_saude = []
+    meses_nomes = {1:'Jan',2:'Fev',3:'Mar',4:'Abr',5:'Mai',6:'Jun',
+                   7:'Jul',8:'Ago',9:'Set',10:'Out',11:'Nov',12:'Dez'}
+    for i in range(5, -1, -1):
+        m = mes - i
+        a = ano
+        while m <= 0:
+            m += 12
+            a -= 1
+        r = db.session.query(db.func.sum(Transacao.valor)).filter(
+            Transacao.usuario_id == request.usuario_id,
+            Transacao.tipo == 'receita',
+            extract('month', Transacao.data) == m,
+            extract('year',  Transacao.data) == a
+        ).scalar() or 0
+        d = db.session.query(db.func.sum(Transacao.valor)).filter(
+            Transacao.usuario_id == request.usuario_id,
+            Transacao.tipo == 'despesa',
+            extract('month', Transacao.data) == m,
+            extract('year',  Transacao.data) == a
+        ).scalar() or 0
+        historico_saude.append({
+            'label': f"{meses_nomes[m]}'{str(a)[-2:]}",
+            'saude': calc_saude(float(r), float(d)),
+            'receitas': float(r),
+            'despesas': float(d)
+        })
+
+    # ── Gastos por categoria no período ───────────────────────
+    categorias_periodo = {}
+    for t in transacoes_periodo:
+        if t.tipo == 'despesa':
+            cat = t.categoria.nome if t.categoria else 'Sem categoria'
+            categorias_periodo[cat] = categorias_periodo.get(cat, 0) + t.valor
+
+    # ── Média histórica por categoria (3 meses anteriores) ────
+    medias_categoria = {}
+    for cat_nome in categorias_periodo:
+        vals = []
+        for i in range(1, 4):
+            m2 = mes - i
+            a2 = ano
+            while m2 <= 0:
+                m2 += 12
+                a2 -= 1
+            soma = db.session.query(db.func.sum(Transacao.valor)).join(
+                Categoria, Transacao.categoria_id == Categoria.id
+            ).filter(
+                Transacao.usuario_id == request.usuario_id,
+                Transacao.tipo == 'despesa',
+                Categoria.nome == cat_nome,
+                extract('month', Transacao.data) == m2,
+                extract('year',  Transacao.data) == a2
+            ).scalar() or 0
+            vals.append(float(soma))
+        com_gasto = [v for v in vals if v > 0]
+        medias_categoria[cat_nome] = round(sum(com_gasto) / len(com_gasto), 2) if com_gasto else 0
+
+    analise_categorias = []
+    for cat, total in categorias_periodo.items():
+        media = medias_categoria.get(cat, 0)
+        desvio = round(((total / media) - 1) * 100, 1) if media > 0 else None
+        status = 'normal'
+        if desvio is not None:
+            if desvio > 20:  status = 'acima'
+            elif desvio < -20: status = 'abaixo'
+        analise_categorias.append({
+            'categoria': cat,
+            'total': round(float(total), 2),
+            'media': media,
+            'desvio': desvio,
+            'status': status
+        })
+    analise_categorias.sort(key=lambda x: x['total'], reverse=True)
+
+    # ── Gastos por categoria mês a mês (barras empilhadas) ────
+    todas_cats = list(set(
+        t.categoria.nome if t.categoria else 'Sem categoria'
+        for t in Transacao.query.filter_by(usuario_id=request.usuario_id).all()
+        if t.tipo == 'despesa'
+    ))
+    labels_meses = []
+    datasets_cats = {c: [] for c in todas_cats}
+    for i in range(5, -1, -1):
+        m = mes - i
+        a = ano
+        while m <= 0:
+            m += 12
+            a -= 1
+        labels_meses.append(f"{meses_nomes[m]}'{str(a)[-2:]}")
+        for cat_nome in todas_cats:
+            soma = db.session.query(db.func.sum(Transacao.valor)).join(
+                Categoria, Transacao.categoria_id == Categoria.id
+            ).filter(
+                Transacao.usuario_id == request.usuario_id,
+                Transacao.tipo == 'despesa',
+                Categoria.nome == cat_nome,
+                extract('month', Transacao.data) == m,
+                extract('year',  Transacao.data) == a
+            ).scalar() or 0
+            datasets_cats[cat_nome].append(float(soma))
+
+    # ── Eventos relevantes ────────────────────────────────────
+    eventos = []
+    todas_transacoes = sorted(transacoes_periodo, key=lambda t: t.valor, reverse=True)
+
+    # Top 3 maiores gastos
+    maiores = [t for t in todas_transacoes if t.tipo == 'despesa'][:3]
+    for t in maiores:
+        eventos.append({
+            'tipo': 'gasto_alto',
+            'descricao': t.descricao,
+            'valor': float(t.valor),
+            'categoria': t.categoria.nome if t.categoria else 'Sem categoria',
+            'data': t.data.strftime('%d/%m/%Y'),
+            'impacto': 'negativo'
+        })
+
+    # Categorias acima da média
+    for item in analise_categorias:
+        if item['status'] == 'acima':
+            eventos.append({
+                'tipo': 'acima_media',
+                'descricao': f"Gastos em {item['categoria']} acima da média",
+                'valor': item['total'],
+                'categoria': item['categoria'],
+                'data': f"{meses_nomes[mes]}/{ano}",
+                'desvio': item['desvio'],
+                'impacto': 'negativo'
+            })
+
+    # Maior receita
+    maior_receita = max((t for t in transacoes_periodo if t.tipo == 'receita'), key=lambda t: t.valor, default=None)
+    if maior_receita:
+        eventos.append({
+            'tipo': 'receita',
+            'descricao': maior_receita.descricao,
+            'valor': float(maior_receita.valor),
+            'categoria': maior_receita.categoria.nome if maior_receita.categoria else 'Receita',
+            'data': maior_receita.data.strftime('%d/%m/%Y'),
+            'impacto': 'positivo'
+        })
+
+    # ── Parágrafo automático ──────────────────────────────────
+    saude_anterior = historico_saude[-2]['saude'] if len(historico_saude) >= 2 else saude
+    diff_saude = saude - saude_anterior
+    nome_mes = meses_nomes[mes]
+
+    if saude >= 70:
+        status_texto = "sua saúde financeira está ótima"
+    elif saude >= 40:
+        status_texto = "sua saúde financeira está em atenção"
+    else:
+        status_texto = "sua saúde financeira está em estado crítico"
+
+    if diff_saude > 0:
+        tendencia = f"uma melhora de {diff_saude} pontos em relação ao mês anterior"
+    elif diff_saude < 0:
+        tendencia = f"uma queda de {abs(diff_saude)} pontos em relação ao mês anterior"
+    else:
+        tendencia = "estabilidade em relação ao mês anterior"
+
+    cats_acima = [c for c in analise_categorias if c['status'] == 'acima']
+    if cats_acima:
+        alerta_cats = f"As categorias que mais pesaram foram: {', '.join(c['categoria'] for c in cats_acima[:2])}."
+    else:
+        alerta_cats = "Nenhuma categoria ficou acima da média histórica."
+
+    paragrafo = (
+        f"Em {nome_mes}/{ano}, {status_texto} com um score de {saude}/100, representando {tendencia}. "
+        f"Você teve R$ {receitas:.2f} em receitas e R$ {despesas:.2f} em despesas, "
+        f"resultando em um saldo de R$ {saldo:.2f}. {alerta_cats}"
+    )
+
+    return jsonify({
+        'periodo': periodo,
+        'mes': mes,
+        'ano': ano,
+        'nome_usuario': usuario.nome,
+        'totais': {
+            'receitas': float(receitas),
+            'despesas': float(despesas),
+            'saldo': float(saldo)
+        },
+        'saude': saude,
+        'saude_anterior': saude_anterior,
+        'paragrafo': paragrafo,
+        'historico_saude': historico_saude,
+        'analise_categorias': analise_categorias,
+        'categorias_empilhadas': {
+            'labels': labels_meses,
+            'datasets': datasets_cats
+        },
+        'eventos': eventos
+    })
 # ─────────────────────────────────────────────
 # UTILITÁRIOS
 # ─────────────────────────────────────────────
