@@ -1266,3 +1266,25 @@ footer {
 .btn-fechar-modal:hover{
     transform:scale(1.1);
 }
+/* ===== BOTÕES DE AÇÃO (EDITAR / EXCLUIR) ===== */
+.btn-editar-tx,
+.btn-excluir-tx {
+  border: none;            /* remove borda */
+  background: transparent; /* remove fundo */
+  outline: none;           /* remove contorno ao clicar */
+  cursor: pointer;         /* mantém o cursor de clique */
+  font-size: 18px;         /* tamanho do ícone */
+  padding: 4px;            /* espaço ao redor do ícone */
+  margin-left: 8px;        /* separa os botões */
+  color: #666;             /* cor neutra */
+  transition: color 0.2s ease;
+}
+
+/* Cores específicas para cada ação */
+.btn-editar-tx:hover {
+  color: #1f7d61;          /* azul-esverdeado ao passar o mouse */
+}
+
+.btn-excluir-tx:hover {
+  color: #e74c3c;          /* vermelho ao passar o mouse */
+}
