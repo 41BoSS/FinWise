@@ -164,18 +164,12 @@ const CATEGORIAS = {
             document.querySelector('.card.saldo .value').textContent =
                 'R$ ' + data.totais.saldo.toFixed(2).replace('.', ',');
 
-            // Saúde financeira
-            const indicador = document.querySelector('.health-indicator');
-            const saudeAtual = data.saude_financeira;
-            indicador.style.width = saudeAtual + '%';
+        // Saúde financeira nova
 
-            if (saudeAtual >= 70) {
-                indicador.style.background = '#279975'; // saudável
-            } else if (saudeAtual >= 40) {
-                indicador.style.background = '#f39c12'; // atenção
-            } else {
-                indicador.style.background = '#e74c3c'; // crítico
-            }
+           atualizarBarraSaude(
+           data.totais.receitas,
+           data.totais.despesas
+           );
 
             // Tabela de transações recentes (5 últimas)
             const tbody = document.querySelector('tbody');
@@ -197,7 +191,21 @@ const CATEGORIAS = {
 
                     row.innerHTML = `
                         <td>${dataFmt}</td>
-                        <td>${t.categoria || '-'}</td>
+                        <td>
+
+<div class="categoria-com-icone">
+
+    <div class="categoria-icone ${isReceita ? 'receita' : 'despesa'}">
+
+        <i class="fas ${obterIcone(t.categoria)}"></i>
+
+    </div>
+
+    <span>${t.categoria || '-'}</span>
+
+</div>
+
+</td>
                         <td>${
                             t.descricao &&
                             t.descricao !== 'Sem descrição'
@@ -410,9 +418,7 @@ const titulo =
 item.innerHTML = `
 
 <div class="historico-icon ${isReceita ? 'receita' : 'despesa'}">
-
-    ${obterIcone(t.categoria)}
-
+    <i class="fas ${obterIcone(t.categoria)}"></i>
 </div>
 
 <div class="historico-info">
@@ -1528,24 +1534,29 @@ if (view === 'alertas') {
         if (linkView) linkView.click();
     }
 
-    function obterIcone(categoria) {
+
+function obterIcone(categoria) {
 
     const icones = {
 
-        'Despesas Fixas': '🏠',
-        'Despesas Variáveis': '🛍️',
-        'Transporte': '🚗',
-        'Investimentos/Reserva': '📈',
-        'Apostas': '🎲',
-        'Salário': '💰',
-        'Freelance/Bico': '💻',
-        'Outro': '🙂'
+        'Despesas Fixas': 'fa-home',
+        'Despesas Variáveis': 'fa-shopping-bag',
+        'Transporte': 'fa-car',
+        'Investimentos/Reserva': 'fa-dollar-sign',
+        'Investimentos/Reservas': 'fa-dollar-sign',
+        'Apostas': 'fa-dice',
+        'Salário': 'fa-dollar-sign',
+        'Freelance/Bico': 'fa-dollar-sign',
+        'Freelancer / Extra': 'fa-dollar-sign',
+        'Vendas': 'fa-dollar-sign',
+        'Outros': 'fa-smile',
+        'Outro': 'fa-smile'
 
     };
 
-    return icones[categoria] || '📌';
-
+    return icones[categoria] || 'fa-dollar-sign';
 }
+
 document
 .getElementById('filtro-data-inicio')
 ?.addEventListener('change', carregarHistorico);
@@ -1553,5 +1564,103 @@ document
 document
 .getElementById('filtro-data-fim')
 ?.addEventListener('change', carregarHistorico);
+
+function calcularSaudeFinanceira(receitas, despesas) {
+
+    if (!receitas || receitas <= 0) {
+        return {
+            percentual: 0,
+            nivel: 'Insolvente',
+            cor: '#ef4444'
+        };
+    }
+
+    const percentualGasto =
+        (despesas / receitas) * 100;
+
+    const saude =
+        Math.max(
+            0,
+            Math.min(
+                100,
+                100 - percentualGasto
+            )
+        );
+
+    let nivel = '';
+    let cor = '';
+
+    if (saude <= 15) {
+        nivel = 'Insolvente';
+        cor = '#ef4444';
+    }
+    else if (saude <= 30) {
+        nivel = 'Crítico';
+        cor = '#f97316';
+    }
+    else if (saude <= 50) {
+        nivel = 'Vulnerável';
+        cor = '#facc15';
+    }
+    else if (saude <= 70) {
+        nivel = 'Estável';
+        cor = '#3b82f6';
+    }
+    else {
+        nivel = 'Saudável';
+        cor = '#22c55e';
+    }
+
+    return {
+        percentual: Math.round(saude),
+        nivel,
+        cor,
+        percentualGasto: Math.round(percentualGasto)
+    };
+}
+
+function atualizarBarraSaude(receitas, despesas) {
+
+    const saude =
+        calcularSaudeFinanceira(
+            receitas,
+            despesas
+        );
+
+    const barra =
+        document.getElementById('barra-saude');
+
+    const badge =
+        document.getElementById('badge-saude');
+
+    const texto =
+        document.getElementById('texto-saude');
+
+    const explicacao =
+        document.getElementById('explicacao-saude');
+
+    if (!barra || !badge || !texto)
+        return;
+
+    barra.style.width =
+        `${saude.percentual}%`;
+
+    badge.textContent =
+        saude.nivel;
+
+    badge.style.background =
+        `${saude.cor}20`;
+
+    badge.style.color =
+        saude.cor;
+
+texto.textContent =
+`${saude.percentual}% • ${saude.nivel}`;
+
+    if (explicacao) {
+        explicacao.textContent =
+            `Você comprometeu ${saude.percentualGasto}% da sua renda este mês.`;
+    }
+}
 
 }); // fim DOMContentLoaded
