@@ -826,3 +826,104 @@ def calcular_proxima_data(data_atual, frequencia):
         return date(data_atual.year + 1, data_atual.month, data_atual.day)
     else:
         return data_atual + timedelta(days=30)
+    
+    # ==========================================================
+# CATEGORIAS FIXAS DO FINWISE
+# ==========================================================
+
+from flask import jsonify
+
+# Estrutura de categorias do sistema
+CATEGORIAS = {
+    "receitas": {
+        "Salário": [
+            "Salário Mensal",
+            "13° Salário",
+            "Bônus"
+        ],
+
+        "Freelancer / Extra": [
+            "Freelance",
+            "Consultoria",
+            "Projeto"
+        ],
+
+        "Vendas": [],
+
+        "Investimentos": [
+            "Dividendos",
+            "Juros",
+            "Rendimentos"
+        ],
+
+        "Outros": []
+    },
+
+    "despesas": {
+        "Despesas Fixas": [
+            "Aluguel/Condomínio",
+            "Água",
+            "Luz",
+            "Internet",
+            "Telefone",
+            "Plano de Saúde",
+            "Streaming"
+        ],
+
+        "Despesas Variáveis": [
+            "Restaurante/Delivery",
+            "Supermercado",
+            "Vestuário",
+            "Viagens",
+            "Lazer",
+            "Saúde/Farmácia"
+        ],
+
+        "Transporte": [
+            "Combustível",
+            "Uber/Táxi",
+            "Transporte Público",
+            "Manutenção"
+        ],
+
+        "Investimentos/Reserva": [
+            "CDB",
+            "Tesouro Direto",
+            "LCI/LCA",
+            "Ações/FIIs",
+            "Previdência",
+            "Criptomoedas",
+            "Reserva de Emergência"
+        ],
+
+        "Apostas": [],
+
+        "Outros": []
+    }
+}
+
+
+# ==========================================================
+# ROTA PARA LISTAR TODAS AS CATEGORIAS
+# ==========================================================
+# Endpoint:
+# GET /api/categorias
+#
+# Retorno:
+# {
+#     "success": true,
+#     "data": { ... }
+# }
+# ==========================================================
+
+@api.route('/categorias', methods=['GET'])
+def listar_categorias():
+    """
+    Retorna todas as categorias e subcategorias
+    disponíveis no sistema FinWise.
+    """
+
+    return jsonify({
+        "success": True,
+        "data": CATEGORIAS
+    }), 200

@@ -22,29 +22,84 @@ document.addEventListener('DOMContentLoaded', function () {
     // 3. SISTEMA DE CATEGORIAS E SUBCATEGORIAS
     // (único — remove os dois sistemas antigos conflitantes)
     // =========================================================
-    const CATEGORIAS = {
-        receita: {
-            'Salário':             ['Salário Mensal', '13º Salário', 'Bônus'],
-            'Freelancer / Extra':  ['Freelance', 'Consultoria', 'Projeto'],
-            'Investimentos':       ['Dividendos', 'Juros', 'Rendimentos'],
-            'Outros':              []
-        },
-        despesa: {
-            'Alimentação':  ['Mercado', 'Restaurante', 'Delivery'],
-            'Transporte':   ['Combustível', 'Uber', 'Ônibus', 'Manutenção'],
-            'Moradia':      ['Aluguel', 'Água', 'Energia', 'Internet'],
-            'Saúde':        ['Plano de Saúde', 'Medicamentos', 'Consultas'],
-            'Lazer':        ['Cinema', 'Viagem', 'Shows'],
-            'Educação':     ['Faculdade', 'Cursos', 'Livros'],
-            'Investimentos/Reservas': ['CDB', 'Tesouro Direto', 'Ações', 'Previdência'],
-            'Apostas':      [],
-            'Outros':       []
-        }
-    };
+const CATEGORIAS = {
+
+    receita: {
+
+        'Salário': [
+            'Salário Mensal',
+            '13° Salário',
+            'Bônus'
+        ],
+
+        'Freelancer / Extra': [
+            'Freelance',
+            'Consultoria',
+            'Projeto'
+        ],
+
+        'Vendas': [],
+
+        'Investimentos': [
+            'Dividendos',
+            'Juros',
+            'Rendimentos'
+        ],
+
+        'Outros': []
+    },
+
+    despesa: {
+
+        'Despesas Fixas': [
+            'Aluguel/Condomínio',
+            'Água',
+            'Luz',
+            'Internet',
+            'Telefone',
+            'Plano de Saúde',
+            'Streaming'
+        ],
+
+        'Despesas Variáveis': [
+            'Restaurante/Delivery',
+            'Supermercado',
+            'Vestuário',
+            'Viagens',
+            'Lazer',
+            'Saúde/Farmácia'
+        ],
+
+        'Transporte': [
+            'Combustível',
+            'Uber/Táxi',
+            'Transporte Público',
+            'Manutenção'
+        ],
+
+        'Investimentos/Reserva': [
+            'CDB',
+            'Tesouro Direto',
+            'LCI/LCA',
+            'Ações/FIIs',
+            'Previdência',
+            'Criptomoedas',
+            'Reserva de Emergência'
+        ],
+
+        'Apostas': [],
+
+        'Outros': []
+    }
+};
 
     function renderizarCategorias(tipo) {
         const grid              = document.getElementById('grid-categoria');
         const selectSubcat      = document.getElementById('select-subcategoria');
+        const grupoSubcat =
+    document.getElementById(
+        'grupo-subcategoria'
+    );
         const inputSubcatCustom = document.getElementById('input-subcategoria-personalizada');
 
         const categorias = Object.keys(CATEGORIAS[tipo]);
@@ -64,6 +119,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 const subcategorias = CATEGORIAS[tipo][categoriaSelecionada] || [];
                 selectSubcat.innerHTML = '<option value="">Selecione...</option>';
+                grupoSubcat.style.display =
+    'none';
+    if (subcategorias.length > 0) {
+
+    grupoSubcat.style.display =
+        'block';
+
+}
                 subcategorias.forEach(sub => {
                     selectSubcat.innerHTML += `<option value="${sub}">${sub}</option>`;
                 });
@@ -227,22 +290,59 @@ document.addEventListener('DOMContentLoaded', function () {
     // =========================================================
     // 6. CARREGAR HISTÓRICO
     // =========================================================
+function obterIcone(categoria) {
+
+    const icones = {
+
+        'Despesas Fixas': '🏠',
+        'Despesas Variáveis': '🛍️',
+        'Transporte': '🚗',
+        'Investimentos/Reservas': '💲',
+        'Apostas': '🎲',
+        'Outros': '😊',
+
+        'Salário': '💲',
+        'Freelance/Bico': '💲',
+        'Rendimentos de Investimentos': '💲',
+        'Vendas': '💲'
+
+    };
+
+    return icones[categoria] || '💲';
+}
     async function carregarHistorico() {
         try {
             const res        = await fetch('http://localhost:5000/api/transacoes',
                 { headers: { 'Authorization': 'Bearer ' + token } });
             const transacoes = await res.json();
+            const dataInicio =
+    document.getElementById('filtro-data-inicio')?.value;
+
+const dataFim =
+    document.getElementById('filtro-data-fim')?.value;
+
+const transacoesFiltradas =
+    transacoes.filter(t => {
+
+        if (dataInicio && t.data < dataInicio)
+            return false;
+
+        if (dataFim && t.data > dataFim)
+            return false;
+
+        return true;
+    });
             const lista      = document.getElementById('historico-lista');
             lista.innerHTML  = '';
 
-            if (!transacoes || !transacoes.length) {
+            if (!transacoesFiltradas || !transacoesFiltradas.length) {
                 lista.innerHTML = '<p style="color:#888; padding:20px;">Nenhuma transação encontrada.</p>';
                 return;
             }
 
             // Agrupa por data (mais recente primeiro)
             const agrupado = {};
-            transacoes.forEach(t => {
+            transacoesFiltradas.forEach(t => {
                 const d = t.data || 'Sem data';
                 if (!agrupado[d]) agrupado[d] = [];
                 agrupado[d].push(t);
@@ -251,11 +351,42 @@ document.addEventListener('DOMContentLoaded', function () {
             const datasOrdenadas = Object.keys(agrupado).sort((a, b) => b.localeCompare(a));
 
             datasOrdenadas.forEach(data => {
-                const dataFmt = data.split('-').reverse().join('/');
-                const grupo   = document.createElement('div');
-                grupo.className = 'historico-grupo';
-                grupo.innerHTML = `<div class="historico-dia">${dataFmt}</div>`;
+                const dataObj = new Date(data + 'T00:00:00');
 
+            const dataPorExtenso =
+            dataObj.toLocaleDateString('pt-BR', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+            });
+const grupo = document.createElement('div');
+
+grupo.className = 'historico-bloco';
+
+const tituloData = document.createElement('div');
+
+tituloData.className = 'historico-data';
+
+tituloData.textContent = dataPorExtenso;
+
+const card = document.createElement('div');
+
+card.className = 'historico-card';
+
+grupo.appendChild(tituloData);
+
+grupo.appendChild(card);
+agrupado[data].sort((a, b) => {
+
+    if (a.tipo === 'receita' && b.tipo !== 'receita')
+        return 1;
+
+    if (a.tipo !== 'receita' && b.tipo === 'receita')
+        return -1;
+
+    return 0;
+});
                 agrupado[data].forEach(t => {
 
                     console.log(t);
@@ -277,19 +408,49 @@ const titulo =
         : (t.subcategoria || t.categoria || 'Sem descrição');
 
 item.innerHTML = `
-                        <div class="historico-info">
-        <div class="historico-titulo">${titulo}</div>
-                            <div class="historico-categoria">${t.categoria || 'Sem categoria'}${t.subcategoria ? ' › ' + t.subcategoria : ''}</div>
-                        </div>
-                        <div class="historico-acoes">
-                            <span class="historico-valor ${isReceita ? 'receita' : 'despesa'}">
-                                ${sinal} ${valorFmt}
-                            </span>
-                            <button class="btn-editar-tx" data-id="${t.id}" title="Editar">✎</button>
-                            <button class="btn-excluir-tx" data-id="${t.id}" title="Excluir">🗑</button>
-                        </div>
-                    `;
-                    grupo.appendChild(item);
+
+<div class="historico-icon ${isReceita ? 'receita' : 'despesa'}">
+
+    ${obterIcone(t.categoria)}
+
+</div>
+
+<div class="historico-info">
+
+    <div class="historico-titulo">
+        ${titulo}
+    </div>
+
+    <div class="historico-categoria">
+        ${t.categoria || ''}
+        ${t.subcategoria ? ' • ' + t.subcategoria : ''}
+    </div>
+
+</div>
+
+<div class="historico-direita">
+
+    <span class="historico-valor ${isReceita ? 'receita' : 'despesa'}">
+        ${sinal} ${valorFmt}
+    </span>
+
+    <div class="historico-botoes">
+
+        <button class="btn-editar-tx"
+                data-id="${t.id}">
+            ✏️
+        </button>
+
+        <button class="btn-excluir-tx"
+                data-id="${t.id}">
+            🗑️
+        </button>
+
+    </div>
+
+</div>
+`;
+                    card.appendChild(item);
                 });
 
                 lista.appendChild(grupo);
@@ -1149,7 +1310,16 @@ inputData.value = `${dia}/${mes}/${ano}`;
         const subcatSelect = document.getElementById('select-subcategoria').value;
         const subcatCustom = (document.getElementById('input-subcategoria-personalizada')?.value || '').trim();
         const subcatFinal  = subcatCustom || subcatSelect;
-        if (!subcatFinal) {
+const categoriasSemSubcategoria = [
+    'Apostas',
+    'Outros',
+    'Vendas'
+];
+
+if (
+    !subcatFinal &&
+    !categoriasSemSubcategoria.includes(categoriaSelecionada)
+) {
     alert('Selecione ou digite uma subcategoria.');
     return;
 }
@@ -1357,5 +1527,31 @@ if (view === 'alertas') {
         const linkView = document.querySelector(`[data-view="${viewInicial}"]`);
         if (linkView) linkView.click();
     }
+
+    function obterIcone(categoria) {
+
+    const icones = {
+
+        'Despesas Fixas': '🏠',
+        'Despesas Variáveis': '🛍️',
+        'Transporte': '🚗',
+        'Investimentos/Reserva': '📈',
+        'Apostas': '🎲',
+        'Salário': '💰',
+        'Freelance/Bico': '💻',
+        'Outro': '🙂'
+
+    };
+
+    return icones[categoria] || '📌';
+
+}
+document
+.getElementById('filtro-data-inicio')
+?.addEventListener('change', carregarHistorico);
+
+document
+.getElementById('filtro-data-fim')
+?.addEventListener('change', carregarHistorico);
 
 }); // fim DOMContentLoaded
