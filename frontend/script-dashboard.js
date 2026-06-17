@@ -1506,20 +1506,40 @@ if (view === 'alertas') {
     });
 
     // Única declaração da função filtrarHistorico
-    function filtrarHistorico(categoria) {
-        document.querySelectorAll('#historico-lista .historico-item').forEach(item => {
-            const cat = item.dataset.categoria || '';
-            item.style.display = (!categoria || categoria === 'todos' || cat === categoria)
-                ? 'flex' : 'none';
+function filtrarHistorico(categoria) {
+
+    document.querySelectorAll('#historico-lista .historico-bloco')
+        .forEach(bloco => {
+
+            const itens =
+                bloco.querySelectorAll('.historico-item');
+
+            let possuiItensVisiveis = false;
+
+            itens.forEach(item => {
+
+                const cat =
+                    item.dataset.categoria || '';
+
+                const mostrar =
+                    !categoria ||
+                    categoria === 'todos' ||
+                    cat === categoria;
+
+                item.style.display =
+                    mostrar ? 'flex' : 'none';
+
+                if (mostrar) {
+                    possuiItensVisiveis = true;
+                }
+            });
+
+            bloco.style.display =
+                possuiItensVisiveis
+                    ? 'block'
+                    : 'none';
         });
-    }
-    document
-.getElementById("btn-fechar-edicao-x")
-?.addEventListener("click", () => {
-
-    document.getElementById("modal-edicao").style.display = "none";
-
-});
+}
 
     // =========================================================
     // 24. INICIAR — chamada única, sempre a última linha
