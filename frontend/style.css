@@ -1,177 +1,16 @@
-/* Reset de estilos padrão */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* Corpo da página */
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f5f5f5;
-  color: #333;
-  line-height: 1.6;
-}
-
-/* Cabeçalho */
-header {
-  background: transparent;
-  box-shadow: none;
-}
-
-header h1 {
-  margin: 0;
-  font-size: 1.8rem;
-}
-
-/* Conteúdo principal */
-main {
-  max-width: 1200px;
-  margin: 2rem auto;
-  padding: 0 1rem;
-}
-
-/* Seções */
-section {
-  background: #ffffff;
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-/* Formulário */
-form {
+  background-color: #f5f6fa;
   display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: flex-end;
+  height: 100vh;
 }
 
-form div {
-  flex: 1 1 200px;
-  display: flex;
-  flex-direction: column;
-}
-
-label {
-  font-weight: 600;
-  margin-bottom: 0.25rem;
-  color: #2c3e50;
-}
-
-input[type="text"],
-input[type="number"],
-select {
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 0.5rem;
-  font-size: 1rem;
-  font-family: inherit;
-}
-
-input[type="text"]:focus,
-input[type="number"]:focus,
-select:focus {
-  outline: none;
-  border-color: #2c3e50;
-  box-shadow: 0 0 0 2px rgba(44,62,80,0.2);
-}
-
-/* Botão de submit */
-button[type="submit"] {
-  background-color: #27ae60;
-  color: #ffffff;
-  border: none;
-  border-radius: 4px;
-  padding: 0.5rem 1.5rem;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  align-self: flex-end;
-}
-
-button[type="submit"]:hover {
-  background-color: #219a52;
-}
-
-/* Lista de transações */
-.transaction-list {
-  list-style: none;
-  padding: 0;
-}
-
-.transaction-list li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid #eee;
-}
-
-.transaction-list li:last-child {
-  border-bottom: none;
-}
-
-.transaction-list .description {
-  font-weight: 500;
-}
-
-.transaction-list .amount {
-  font-weight: 600;
-}
-
-.transaction-list .amount.income {
-  color: #27ae60;
-}
-
-.transaction-list .amount.expense {
-  color: #e74c3c;
-}
-
-/* Rodapé */
-footer {
-  background-color: #2c3e50;
-  color: #ffffff;
-  text-align: center;
-  padding: 1rem;
-  margin-top: 2rem;
-  font-size: 0.9rem;
-}
-
-/* Media queries para responsividade */
-@media (max-width: 768px) {
-  header {
-    padding: 0.75rem 1rem;
-  }
-
-  header h1 {
-    font-size: 1.5rem;
-  }
-
-  main {
-    margin: 1rem auto;
-    padding: 0 0.5rem;
-  }
-
-  form {
-    flex-direction: column;
-  }
-
-  form div {
-    flex: 1 1 100%;
-  }
-
-  button[type="submit"] {
-    width: 100%;
-  }
-
-  .transaction-list li {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.25rem;
-  }
-}
 .sidebar nav ul li {
     width: 100%;
 }
@@ -414,17 +253,7 @@ footer {
 }
 #modal-edicao .modal-body{
     padding:32px;
-}
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f5f6fa;
-      display: flex;
-      height: 100vh;
+    
     }
     .sidebar {
       background: #ffffff;
@@ -441,45 +270,7 @@ footer {
     .sidebar nav ul {
       list-style: none;
     }
-.sidebar nav ul li {
-  padding: 0;
-  margin: 4px 0;
-  border-radius: 8px;
-  cursor: pointer;
-}
-.sidebar nav ul li a {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: 12px 15px;
-  border-radius: 8px;
-  text-decoration: none;
-  color: #555;
-  font-size: 14px;
-  font-weight: 500;
-  transition: background 0.2s, color 0.2s;
-}
-.sidebar nav ul li a i {
-  margin-right: 10px;
-  color: #888;
-  width: 18px;
-  text-align: center;
-  transition: color 0.2s;
-}
-.sidebar nav ul li a:hover {
-  background: #e8f5e9;
-  color: #279975;
-}
-.sidebar nav ul li a:hover i {
-  color: #279975;
-}
-.sidebar nav ul li.active a {
-  background: #279975;
-  color: #ffffff;
-}
-.sidebar nav ul li.active a i {
-  color: #ffffff;
-}
+
 .sidebar nav ul li {
   padding: 0;
   margin: 4px 0;
@@ -618,10 +409,10 @@ footer {
     }
     .health-indicator {
       height: 100%;
-      width: 70%;
-      background: linear-gradient(90deg, #e74c3c, #f1c40f, #279975);
+      width: 0%;
+      background: #279975;
       border-radius: 20px;
-      transition: width 0.3s;
+      transition: width 0.3s, background 0.3s;
     }
     .charts {
       display: grid;

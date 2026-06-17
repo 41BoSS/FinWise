@@ -102,8 +102,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 'R$ ' + data.totais.saldo.toFixed(2).replace('.', ',');
 
             // Saúde financeira
-            document.querySelector('.health-indicator').style.width =
-                data.saude_financeira + '%';
+            const indicador = document.querySelector('.health-indicator');
+            const saudeAtual = data.saude_financeira;
+            indicador.style.width = saudeAtual + '%';
+
+            if (saudeAtual >= 70) {
+                indicador.style.background = '#279975'; // saudável
+            } else if (saudeAtual >= 40) {
+                indicador.style.background = '#f39c12'; // atenção
+            } else {
+                indicador.style.background = '#e74c3c'; // crítico
+            }
 
             // Tabela de transações recentes (5 últimas)
             const tbody = document.querySelector('tbody');
@@ -173,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         labels: donutData.labels,
                         datasets: [{
                             data: donutData.data,
-                            backgroundColor: ['#279975','#e74c3c','#f1c40f','#3498db','#9b59b6','#e67e22']
+                            backgroundColor: ['#3498db','#9b59b6','#f39c12','#1abc9c','#34495e','#e67e22','#7f8c8d','#16a085']
                         }]
                     },
                     options: {

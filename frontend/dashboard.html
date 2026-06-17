@@ -171,165 +171,6 @@
     <div class="historico-lista" id="historico-lista"></div>
 
   </div>
-
-  </section>
-
-
-</section>
-
-<section id="view-historico" style="display:none;">
-  <div class="historico-container">
-
-    <div class="historico-header">
-      <h1>Histórico</h1>
-      <button class="btn-nova-transacao">+ Nova Transação</button>
-    </div>
-
-    <div class="historico-filtros">
-      <div class="filtro-grupo">
-        <label>Data início</label>
-        <input type="date" id="filtro-data-inicio">
-      </div>
-      <div class="filtro-grupo">
-        <label>Data fim</label>
-        <input type="date" id="filtro-data-fim">
-      </div>
-    </div>
-
-    <div class="historico-categorias">
-      <button class="historico-categoria-btn active" data-categoria="todos">Todos</button>
-      <button class="historico-categoria-btn" data-categoria="Despesas Fixas">Despesas Fixas</button>
-      <button class="historico-categoria-btn" data-categoria="Despesas Variáveis">Despesas Variáveis</button>
-      <button class="historico-categoria-btn" data-categoria="Transporte">Transporte</button>
-      <button class="historico-categoria-btn" data-categoria="Investimentos/Reservas">Investimentos/Reservas</button>
-      <button class="historico-categoria-btn" data-categoria="Apostas">Apostas</button>
-      <button class="historico-categoria-btn" data-categoria="Salário">Salário</button>
-      <button class="historico-categoria-btn" data-categoria="Freelance/Bico">Freelance/Bico</button>
-      <button class="historico-categoria-btn" data-categoria="Outro">Outro</button>
-    </div>
-
-    <div class="historico-lista" id="historico-lista"></div>
-
-  </div>
-</section>
-
-<section id="view-agenda" style="display:none;">
-</section>
-
-<section id="view-perfil" style="display:none;">
-
-<div class="perfil-container">
-
-    <h1>Perfil</h1>
-
-    <div class="perfil-card">
-
-      <div class="perfil-avatar">
-        LC
-      </div>
-
-      <h2 class="perfil-nome">
-        lc202321742
-      </h2>
-
-      <div class="perfil-info">
-
-        <div class="perfil-campo">
-          <label>E-mail</label>
-          <p>lc202321742@gmail.com</p>
-        </div>
-
-        <div class="perfil-campo">
-          <label>Telefone</label>
-          <p>(11) 98765-4321</p>
-        </div>
-
-      </div>
-
-      <button class="btn-editar-perfil">
-        Editar perfil
-      </button>
-
-      <button class="btn-alterar-senha">
-        Alterar senha
-      </button>
-
-      <button class="btn-sair">
-        Sair
-      </button>
-
-    </div>
-
-  </div>
-
-</section>
-
-  </div>
-
-  <!-- MODAL NOVA TRANSAÇÃO -->
-  <div id="modal-transacao" class="modal-overlay" style="display: none;">
-    <div class="modal-container">
-      <div class="modal-header">
-        <button class="modal-back" id="btn-fechar-modal">
-          <i class="fas fa-arrow-left"></i> Nova Transação
-        </button>
-      </div>
-      <div class="modal-body">
-        <!-- Toggle Receita / Despesa -->
-        <div class="tipo-toggle">
-          <button class="tipo-btn active" data-tipo="receita" id="btn-receita">Receita</button>
-          <button class="tipo-btn" data-tipo="despesa" id="btn-despesa">Despesa</button>
-        </div>
-
-        <!-- Valor -->
-        <div class="form-group">
-          <label class="form-label">Valor</label>
-          <div class="valor-input-wrapper">
-            <span class="valor-sinal">R$</span>
-            <input type="text" class="form-input valor-input" id="input-valor" placeholder="0,00" inputmode="decimal">
-          </div>
-        </div>
-
-        <!-- Data -->
-        <div class="form-group">
-          <label class="form-label">Data</label>
-          <input type="text" class="form-input" id="input-data" placeholder="dd/mm/aaaa">
-        </div>
-
-        <!-- Categoria -->
-        <label class="form-label" style="margin-bottom: 10px; display: block;">Categoria</label>
-        <div class="categoria-grid" id="grid-categoria">
-          <button class="categoria-btn" data-categoria="Despesas Fixas">Despesas Fixas</button>
-          <button class="categoria-btn" data-categoria="Despesas Variáveis">Despesas Variáveis</button>
-          <button class="categoria-btn" data-categoria="Transporte">Transporte</button>
-          <button class="categoria-btn" data-categoria="Investimentos/Reservas">Investimentos/Reservas</button>
-          <button class="categoria-btn" data-categoria="Apostas">Apostas</button>
-          <button class="categoria-btn" data-categoria="Outros">Outros</button>
-        </div>
-        <div class="form-group">
-    <label class="form-label">Subcategoria</label>
-
-    <select class="form-select" id="select-subcategoria">
-        <option value="">Selecione...</option>
-    </select>
-</div>
-
-<div class="form-group">
-    <input
-        type="text"
-        class="form-input"
-        id="input-subcategoria-personalizada"
-        placeholder="Ou digite uma subcategoria personalizada">
-</div>
-
-        <!-- Descrição -->
-        <div class="form-group">
-          <label class="form-label">Descrição (opcional)</label>
-          <textarea class="form-textarea" id="input-descricao" placeholder="Adicione detalhes sobre esta transação..."></textarea>
-        </div>
-        <!-- Adicionar à agenda -->
-<div class="recorrente-toggle">
-  <span>Adicionar à agenda?</span>
 </section>
 
 <section id="view-agenda" style="display:none;">
@@ -371,7 +212,6 @@
     <div style="font-size:13px; margin-top:6px;">Nenhum alerta no momento.</div>
   </div>
 </section>
-
 <section id="view-relatorio" style="display:none;">
 
   <!-- Cabeçalho -->
@@ -459,6 +299,7 @@
 
 </section>
 
+  </div>
   <!-- MODAL NOVA TRANSAÇÃO -->
   <div id="modal-transacao" class="modal-overlay" style="display: none;">
     <div class="modal-container">
@@ -586,101 +427,101 @@
     </div>
   </div>
 
+  <!-- MODAL CONFIRMAÇÃO -->
+  <div id="modal-confirmacao" class="modal-overlay" style="display:none;">
+      <div class="modal-box">
+          <h3 id="confirmacao-titulo">Confirmar</h3>
+          <p id="confirmacao-mensagem"></p>
+
+          <div class="modal-actions">
+              <button id="btn-cancelar-confirmacao" class="btn-cancelar">
+                  Cancelar
+              </button>
+
+              <button id="btn-confirmar" class="btn-confirmar">
+                  Confirmar
+              </button>
+          </div>
+      </div>
+  </div>
+
+  <!-- MODAL EDIÇÃO -->
+  <div id="modal-edicao" class="modal-overlay" style="display:none;">
+
+      <div class="modal-container">
+
+          <div class="modal-body">
+
+              <div class="modal-topo">
+
+                  <h2>Editar Transação</h2>
+
+                  <button
+                      id="btn-fechar-edicao-x"
+                      class="btn-fechar-modal">
+                      ×
+                  </button>
+
+              </div>
+
+              <div class="form-group">
+                  <label class="form-label">
+                      Descrição
+                  </label>
+
+                  <input
+                      type="text"
+                      id="edit-descricao"
+                      class="form-input">
+              </div>
+
+              <div class="form-group">
+                  <label class="form-label">
+                      Valor
+                  </label>
+
+                  <input
+                      type="text"
+                      id="edit-valor"
+                      class="form-input">
+              </div>
+
+              <div class="form-group">
+                  <label class="form-label">
+                      Data
+                  </label>
+
+                  <input
+                      type="date"
+                      id="edit-data"
+                      class="form-input">
+              </div>
+
+              <div class="modal-actions">
+
+                  <button
+                      id="btn-fechar-edicao"
+                      class="btn-cancelar">
+                      Cancelar
+                  </button>
+
+                  <button
+                      id="btn-salvar-edicao"
+                      class="btn-salvar-edicao">
+                      Salvar
+                  </button>
+
+              </div>
+
+          </div>
+
+      </div>
+
+  </div>
+
   <script>
     document.getElementById('current-date').textContent = new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   </script>
   <script src="script-dashboard.js"></script>
-  <!-- MODAL CONFIRMAÇÃO -->
-<div id="modal-confirmacao" class="modal-overlay" style="display:none;">
-    <div class="modal-box">
-        <h3 id="confirmacao-titulo">Confirmar</h3>
-        <p id="confirmacao-mensagem"></p>
-
-        <div class="modal-actions">
-            <button id="btn-cancelar-confirmacao" class="btn-cancelar">
-                Cancelar
-            </button>
-
-            <button id="btn-confirmar" class="btn-confirmar">
-                Confirmar
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL EDIÇÃO -->
-<!-- MODAL EDIÇÃO -->
-<div id="modal-edicao" class="modal-overlay" style="display:none;">
-
-    <div class="modal-container">
-
-        <div class="modal-body">
-
-            <div class="modal-topo">
-
-                <h2>Editar Transação</h2>
-
-                <button
-                    id="btn-fechar-edicao-x"
-                    class="btn-fechar-modal">
-                    ×
-                </button>
-
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">
-                    Descrição
-                </label>
-
-                <input
-                    type="text"
-                    id="edit-descricao"
-                    class="form-input">
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">
-                    Valor
-                </label>
-
-                <input
-                    type="text"
-                    id="edit-valor"
-                    class="form-input">
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">
-                    Data
-                </label>
-
-                <input
-                    type="date"
-                    id="edit-data"
-                    class="form-input">
-            </div>
-
-            <div class="modal-actions">
-
-                <button
-                    id="btn-fechar-edicao"
-                    class="btn-cancelar">
-                    Cancelar
-                </button>
-
-                <button
-                    id="btn-salvar-edicao"
-                    class="btn-salvar-edicao">
-                    Salvar
-                </button>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
 </body>
 </html>

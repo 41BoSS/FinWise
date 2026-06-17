@@ -97,48 +97,47 @@ def criar_transacao():
     db.session.add(transacao)
     db.session.commit()
 
-    if recorrente:
-        if recorrente and frequencia:
-            frequencia_lower = frequencia.lower()
-            if frequencia_lower == 'semanal':
-                total_ocorrencias = 12
-            elif frequencia_lower == 'mensal':
-                total_ocorrencias = 12
-            elif frequencia_lower == 'anual':
-                total_ocorrencias = 3
-            else:
-                total_ocorrencias = 12
-
-            data_atual = data_vencimento
-            for i in range(total_ocorrencias):
-                ag = Agendamento(
-                    usuario_id=request.usuario_id,
-                    descricao=descricao,
-                    valor=float(valor),
-                    categoria=categoria_nome,
-                    tipo=tipo,
-                    data_vencimento=data_atual,
-                    recorrente=True,
-                    frequencia=frequencia_lower,
-                    status='a_vencer'
-                )
-                db.session.add(ag)
-                data_atual = calcular_proxima_data(data_atual, frequencia_lower)
-            db.session.commit()
+    if recorrente and frequencia:
+        frequencia_lower = frequencia.lower()
+        if frequencia_lower == 'semanal':
+            total_ocorrencias = 12
+        elif frequencia_lower == 'mensal':
+            total_ocorrencias = 12
+        elif frequencia_lower == 'anual':
+            total_ocorrencias = 3
         else:
-            agendamento = Agendamento(
+            total_ocorrencias = 12
+
+        data_atual = data_vencimento
+        for i in range(total_ocorrencias):
+            ag = Agendamento(
                 usuario_id=request.usuario_id,
                 descricao=descricao,
                 valor=float(valor),
                 categoria=categoria_nome,
                 tipo=tipo,
-                data_vencimento=data_vencimento,
-                recorrente=False,
-                frequencia=None,
+                data_vencimento=data_atual,
+                recorrente=True,
+                frequencia=frequencia_lower,
                 status='a_vencer'
             )
-            db.session.add(agendamento)
-            db.session.commit()
+            db.session.add(ag)
+            data_atual = calcular_proxima_data(data_atual, frequencia_lower)
+        db.session.commit()
+    elif data_vencimento_str:
+        agendamento = Agendamento(
+            usuario_id=request.usuario_id,
+            descricao=descricao,
+            valor=float(valor),
+            categoria=categoria_nome,
+            tipo=tipo,
+            data_vencimento=data_vencimento,
+            recorrente=False,
+            frequencia=None,
+            status='a_vencer'
+        )
+        db.session.add(agendamento)
+        db.session.commit()
 
     return jsonify({'id': transacao.id, 'mensagem': 'Transacao criada'}), 201
 
