@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agenda - FinWise</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f6fa;
+      display: flex;
+      height: 100vh;
+    }
+    
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: 20px;
+      border-top: 1px solid #f0f0f0;
+    }
+    .sidebar-footer li {
+      padding: 12px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #333;
+      list-style: none;
+    }
+    .sidebar-footer li i { margin-right: 10px; color: #279975; }
+    .sidebar-footer li:hover { background: #e8f5e9; }
+    .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+    h1 { font-size: 26px; color: #333; margin-bottom: 24px; }
+
+    /* CALENDÁRIO */
+    .calendar-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+      margin-bottom: 24px;
+    }
+    .calendar-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .calendar-nav h2 { font-size: 18px; color: #333; text-transform: capitalize; }
+    .calendar-nav button {
+      background: none;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      width: 36px;
+      height: 36px;
+      cursor: pointer;
+      font-size: 16px;
+      color: #555;
+      transition: all 0.2s;
+    }
+    .calendar-nav button:hover { background: #e8f5e9; border-color: #279975; color: #279975; }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+    .calendar-day-name {
+      text-align: center;
+      font-size: 12px;
+      color: #999;
+      padding: 8px 0;
+      font-weight: 600;
+    }
+    .calendar-day {
+      text-align: center;
+      padding: 8px 4px;
+      border-radius: 50%;
+      font-size: 14px;
+      color: #333;
+      cursor: pointer;
+      position: relative;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+      transition: background 0.2s;
+    }
+    .calendar-day:hover { background: #f0f0f0; }
+    .calendar-day.today { font-weight: bold; color: #279975; }
+    .calendar-day.selecionado { background: #279975; color: white; }
+    .calendar-day.vencido { background: #e74c3c; color: white; }
+    .calendar-day.proximo { background: #f39c12; color: white; }
+    .calendar-day.pago { background: #279975; color: white; }
+    .calendar-day.vazio { cursor: default; }
+    .calendar-legenda {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 16px;
+      font-size: 13px;
+      color: #666;
+    }
+    .legenda-item { display: flex; align-items: center; gap: 6px; }
+    .legenda-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .legenda-dot.vencido { background: #e74c3c; }
+    .legenda-dot.proximo { background: #f39c12; }
+    .legenda-dot.pago { background: #279975; }
+
+    /* LISTA DE CONTAS */
+    .lista-section { margin-bottom: 24px; }
+    .lista-titulo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #333;
+    }
+    .lista-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .conta-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      transition: transform 0.2s;
+    }
+    .conta-card:hover { transform: translateY(-2px); }
+    .conta-info { display: flex; align-items: center; gap: 14px; }
+    .conta-icone { color: #bbb; font-size: 18px; }
+    .conta-desc { font-size: 15px; font-weight: 500; color: #333; }
+    .conta-meta { font-size: 12px; color: #999; margin-top: 2px; }
+    .conta-valor { font-size: 16px; font-weight: 700; color: #e74c3c; }
+    .conta-acoes { display: flex; gap: 8px; margin-left: 16px; }
+    .btn-pagar {
+      background: #279975;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-pagar:hover { background: #1e7a5e; }
+    .btn-deletar {
+      background: #fff;
+      color: #e74c3c;
+      border: 1px solid #e74c3c;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-deletar:hover { background: #ffeaea; }
+    .vazio-msg {
+      text-align: center;
+      color: #bbb;
+      padding: 30px;
+      background: #fff;
+      border-radius: 12px;
+    }
+
+    /* BANNER ALERTA */
+    .banner-alerta {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 12px;
+      padding: 14px 20px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #856404;
+      font-size: 14px;
+    }
+    .banner-alerta i { font-size: 18px; color: #ffc107; }
+    .banner-alerta.receita {
+    background: #d4edda;
+    border-color: #28a745;
+    color: #155724;
+   }
+    .banner-alerta.receita i { color: #28a745; }
+    .conta-card.receita { border-left: 3px solid #1a7a5e; }
+    .conta-valor.receita { color: #1a7a5e; }
+    .calendar-day.receita { background: #a8e6cf; color: #1a7a5e; }
+    .conta-card.proximo-urgente { border-left: 3px solid #f39c12; background: #fff3cd; }
+    .conta-card.proximo-fraco { border-left: 3px solid #f0d080; background: #fffdf0; }
+    .calendar-day.proximo-fraco { background: #fef9e7; color: #856404; }
+    .conta-card.vencido-card { border-left: 3px solid #e74c3c; background: #fdecea; }
+    .conta-card.receita-urgente { border-left: 3px solid #1a7a5e; background: #d4edda; }
+    .conta-card.receita-fraca { border-left: 3px solid #279975; background: #f0faf5; }
+    .legenda-dot.receita { background: #a8e6cf; }
+    .conta-card.pago-despesa { border-left: 3px solid #279975; }
+    .conta-card.pago-receita { border-left: 3px solid #279975; }
+    .btn-cancelar-rec {
+    background: #fff;
+    color: #e67e22;
+    border: 1px solid #e67e22;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-cancelar-rec:hover { background: #fef5ec; }
+
+/* ===== AGENDA: CALENDÁRIO E LISTA DE CONTAS ===== */
+
+h1 { font-size: 26px; color: #333; margin-bottom: 24px; }
+
+.calendar-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+  margin-bottom: 24px;
+}
+.calendar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.calendar-nav h2 { font-size: 18px; color: #333; text-transform: capitalize; }
+.calendar-nav button {
+  background: none;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  font-size: 16px;
+  color: #555;
+  transition: all 0.2s;
+}
+.calendar-nav button:hover { background: #e8f5e9; border-color: #279975; color: #279975; }
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.calendar-day-name {
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+  padding: 8px 0;
+  font-weight: 600;
+}
+.calendar-day {
+  text-align: center;
+  padding: 8px 4px;
+  border-radius: 50%;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  position: relative;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  transition: background 0.2s;
+}
+.calendar-day:hover { background: #f0f0f0; }
+.calendar-day.today { font-weight: bold; color: #279975; }
+.calendar-day.selecionado { background: #279975; color: white; }
+.calendar-day.vencido { background: #e74c3c; color: white; }
+.calendar-day.proximo { background: #f39c12; color: white; }
+.calendar-day.pago { background: #279975; color: white; }
+.calendar-day.vazio { cursor: default; }
+.calendar-legenda {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-top: 16px;
+  font-size: 13px;
+  color: #666;
+}
+.legenda-item { display: flex; align-items: center; gap: 6px; }
+.legenda-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.legenda-dot.vencido { background: #e74c3c; }
+.legenda-dot.proximo { background: #f39c12; }
+.legenda-dot.pago { background: #279975; }
+
+/* LISTA DE CONTAS */
+.lista-section { margin-bottom: 24px; }
+.lista-titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #333;
+}
+.lista-dot { width: 10px; height: 10px; border-radius: 50%; }
+.conta-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  transition: transform 0.2s;
+}
+.conta-card:hover { transform: translateY(-2px); }
+.conta-info { display: flex; align-items: center; gap: 14px; }
+.conta-icone { color: #bbb; font-size: 18px; }
+.conta-desc { font-size: 15px; font-weight: 500; color: #333; }
+.conta-meta { font-size: 12px; color: #999; margin-top: 2px; }
+.conta-valor { font-size: 16px; font-weight: 700; color: #e74c3c; }
+.conta-acoes { display: flex; gap: 8px; margin-left: 16px; }
+.btn-pagar {
+  background: #279975;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-pagar:hover { background: #1e7a5e; }
+.btn-deletar {
+  background: #fff;
+  color: #e74c3c;
+  border: 1px solid #e74c3c;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-deletar:hover { background: #ffeaea; }
+.vazio-msg {
+  text-align: center;
+  color: #bbb;
+  padding: 30px;
+  background: #fff;
+  border-radius: 12px;
+}
+
+/* BANNER ALERTA */
+.banner-alerta {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 12px;
+  padding: 14px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #856404;
+  font-size: 14px;
+}
+.banner-alerta i { font-size: 18px; color: #ffc107; }
+.banner-alerta.receita {
+  background: #d4edda;
+  border-color: #28a745;
+  color: #155724;
+}
+.banner-alerta.receita i { color: #28a745; }
+.conta-card.receita { border-left: 3px solid #1a7a5e; }
+.conta-valor.receita { color: #1a7a5e; }
+.calendar-day.receita { background: #a8e6cf; color: #1a7a5e; }
+.conta-card.proximo-urgente { border-left: 3px solid #f39c12; background: #fff3cd; }
+.conta-card.proximo-fraco { border-left: 3px solid #f0d080; background: #fffdf0; }
+.calendar-day.proximo-fraco { background: #fef9e7; color: #856404; }
+.conta-card.vencido-card { border-left: 3px solid #e74c3c; background: #fdecea; }
+.conta-card.receita-urgente { border-left: 3px solid #1a7a5e; background: #d4edda; }
+.conta-card.receita-fraca { border-left: 3px solid #279975; background: #f0faf5; }
+.legenda-dot.receita { background: #a8e6cf; }
+.conta-card.pago-despesa { border-left: 3px solid #279975; }
+.conta-card.pago-receita { border-left: 3px solid #279975; }
+.btn-cancelar-rec {
+  background: #fff;
+  color: #e67e22;
+  border: 1px solid #e67e22;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-cancelar-rec:hover { background: #fef5ec; }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <h2>FinWise</h2>
+    <div style="font-size: 12px; color: #999;">Finanças inteligentes</div>
+    <nav>
+  <ul>
+
+    <li>
+      <a href="dashboard.html?view=inicio">
+        <i class="fas fa-home"></i>
+        <span>Início</span>
+      </a>
+    </li>
+
+    <li>
+      <a href="dashboard.html?view=historico">
+        <i class="fas fa-history"></i>
+        <span>Histórico</span>
+      </a>
+    </li>
+
+    <li class="active">
+      <a href="agenda.html?view=agenda">
+        <i class="fas fa-calendar-alt"></i>
+        <span>Agenda</span>
+      </a>
+    </li>
+
+    <li>
+      <a href="dashboard.html?view=alertas">
+        <i class="fas fa-bell"></i>
+        <span>Alertas</span>
+      </a>
+    </li>
+
+    <li>
+      <a href="dashboard.html?view=relatorio">
+        <i class="fas fa-chart-line"></i>
+        <span>Relatório</span>
+      </a>
+    </li>
+
+    <li>
+      <a href="dashboard.html?view=perfil">
+        <i class="fas fa-user"></i>
+        <span>Perfil</span>
+      </a>
+    </li>
+
+  </ul>
+</nav>
+  </div>
+
+  <div class="main-content">
+    <h1>Agenda</h1>
+
+    <!-- Banner de alertas -->
+    <div class="banner-alerta" id="banner-despesa" style="display:none;">
+  <i class="fas fa-exclamation-triangle"></i>
+  <span id="banner-texto-despesa"></span>
+</div>
+<div class="banner-alerta receita" id="banner-receita" style="display:none;">
+  <i class="fas fa-arrow-circle-up"></i>
+  <span id="banner-texto-receita"></span>
+</div>
+
+    <!-- Calendário -->
+    <div class="calendar-card">
+      <div class="calendar-nav">
+        <button id="btn-mes-anterior">←</button>
+        <h2 id="titulo-mes"></h2>
+        <button id="btn-mes-proximo">→</button>
+      </div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+      <div class="calendar-legenda">
+    <div class="legenda-item"><span class="legenda-dot vencido"></span> Vencido</div>
+    <div class="legenda-item"><span class="legenda-dot proximo"></span> Próximo</div>
+    <div class="legenda-item"><span class="legenda-dot pago"></span> Pago</div>
+    <div class="legenda-item"><span class="legenda-dot receita"></span> A Receber</div>
+</div>
+    </div>
+
+    <!-- Listas de contas -->
+    <div id="lista-vencido" class="lista-section" style="display:none;">
+      <div class="lista-titulo">
+        <span class="lista-dot" style="background:#e74c3c;"></span> Vencido
+      </div>
+      <div id="contas-vencido"></div>
+    </div>
+
+    <div id="lista-proximo" class="lista-section" style="display:none;">
+    <div class="lista-titulo">
+        <span class="lista-dot" style="background:#f39c12;"></span> A Vencer
+    </div>
+      <div id="contas-proximo"></div>
+    </div>
+    <div id="lista-receita" class="lista-section" style="display:none;">
+    <div class="lista-titulo">
+        <span class="lista-dot" style="background:#279975;"></span> A Receber
+    </div>
+    <div id="contas-receita"></div>
+</div>
+    <div id="lista-pago" class="lista-section" style="display:none;">
+      <div class="lista-titulo">
+        <span class="lista-dot" style="background:#279975;"></span> Pago
+      </div>
+      <div id="contas-pago"></div>
+    </div>
+
+    <div id="lista-vazia" class="vazio-msg" style="display:none;">
+      Nenhuma conta agendada neste mês.
+    </div>
+  </div>
+
+  <script src="script-agenda.js"></script>
+</body>
+</html>

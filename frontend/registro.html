@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Conta</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #F5F2ED;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            color: #279975;
+            text-decoration: none;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .back-link i {
+            margin-right: 8px;
+        }
+
+        h1 {
+            color: #279975;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            color: #6B7280;
+            margin-bottom: 6px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px 16px;
+            background-color: white;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            font-size: 16px;
+            color: #333;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        input:focus {
+            border-color: #279975;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #6B7280;
+            font-size: 18px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            margin-bottom: 0;
+            font-size: 14px;
+            color: #6B7280;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background-color: #279975;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-submit:hover {
+            background-color: #1f7d5e;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 24px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="login.html" class="back-link"><i class="fas fa-arrow-left"></i> Voltar</a>
+        <h1>Criar conta</h1>
+        <form id="register-form">
+            <div class="form-group">
+                <label for="name">Nome</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="email">E-mail</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">Telefone</label>
+                <input type="tel" id="phone" name="phone" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Senha</label>
+                <div class="input-wrapper">
+                    <input type="password" id="password" name="password" required>
+                    <span class="toggle-password" onclick="togglePassword('password', this)"><i class="fas fa-eye"></i></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="confirm_password">Confirmar Senha</label>
+                <div class="input-wrapper">
+                    <input type="password" id="confirm_password" name="confirm_password" required>
+                    <span class="toggle-password" onclick="togglePassword('confirm_password', this)"><i class="fas fa-eye"></i></span>
+                </div>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="terms" name="terms" required>
+                <label for="terms">Aceito os termos e condições</label>
+            </div>
+            <button type="submit" class="btn-submit">Criar conta</button>
+        </form>
+    </div>
+
+    <script>
+        function togglePassword(inputId, iconSpan) {
+            const input = document.getElementById(inputId);
+            const icon = iconSpan.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+    </script>
+    <script src="auth.js"></script>
+</body>
+</html>

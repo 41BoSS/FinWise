@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Financeiro</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="sidebar">
+    <h2>FinWise</h2>
+    <div style="font-size: 12px; color: #999;">Finanças inteligentes</div>
+<nav>
+  <ul>
+
+    <li class="active">
+      <a href="#" data-view="inicio">
+        <i class="fas fa-home"></i>
+        <span>Início</span>
+      </a>
+    </li>
+
+    <li>
+      <a href="#" data-view="historico">
+        <i class="fas fa-history"></i>
+        <span>Histórico</span>
+      </a>
+    </li>
+
+    <li>
+  <a href="#" data-view="agenda">
+    <i class="fas fa-calendar-alt"></i>
+    <span>Agenda</span>
+  </a>
+</li>
+
+    <li>
+      <a href="#" data-view="alertas">
+        <i class="fas fa-bell"></i>
+        <span>Alertas</span>
+      </a>
+    </li>
+
+    <li>
+  <a href="#" data-view="relatorio">
+    <i class="fas fa-chart-line"></i>
+    <span>Relatório</span>
+  </a>
+</li>
+
+    <li>
+      <a href="#" data-view="perfil">
+        <i class="fas fa-user"></i>
+        <span>Perfil</span>
+      </a>
+    </li>
+
+  </ul>
+</nav>
+  </div>
+  <div class="main-content">
+
+    <section id="view-inicio">
+
+    <header>
+      <div class="greeting">
+        <h1>Olá, <span id="user-name">[nome]</span></h1>
+        <p id="current-date"></p>
+      </div>
+      <div class="header-right">
+        <div class="notification" id="sino-btn">
+  <i class="fas fa-bell"></i>
+  <span id="badge-alertas" style="display:none; position:absolute; top:-6px; right:-6px; background:#e74c3c; color:white; border-radius:50%; width:18px; height:18px; font-size:11px; display:none; align-items:center; justify-content:center;"></span>
+
+  <!-- Dropdown -->
+  <div id="notif-dropdown" style="display:none; position:absolute; top:40px; right:0; width:320px; background:#fff; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.15); z-index:999; overflow:hidden;">
+    <div style="padding:16px 20px; font-weight:600; font-size:15px; border-bottom:1px solid #f0f0f0;">Notificações</div>
+    <div id="notif-lista" style="max-height:320px; overflow-y:auto;"></div>
+    <div style="padding:14px 20px; text-align:center; border-top:1px solid #f0f0f0;">
+      <a href="agenda.html" style="color:#279975; font-weight:600; font-size:14px; text-decoration:none;">Ver todos os alertas</a>
+    </div>
+  </div>
+</div>
+        <div class="avatar"></div>
+      </div>
+    </header>
+    <div class="cards">
+      <div class="card receitas">
+        <h3>Receitas</h3>
+        <div class="value">R$ 0,00</div>
+      </div>
+      <div class="card despesas">
+        <h3>Despesas</h3>
+        <div class="value">R$ 0,00</div>
+      </div>
+      <div class="card saldo">
+        <h3>Saldo</h3>
+        <div class="value">R$ 0,00</div>
+      </div>
+    </div>
+    <div class="health-bar-section">
+      <h2>Saúde Financeira</h2>
+      <div class="health-bar">
+        <div class="health-indicator" style="width: 70%;"></div>
+      </div>
+    </div>
+    <div class="charts">
+      <div class="chart-placeholder">
+        <canvas id="donutChart"></canvas>
+      </div>
+      <div class="chart-placeholder">
+        <canvas id="barChart"></canvas>
+      </div>
+    </div>
+    <div class="transactions-table">
+      <h3>Transações Recentes</h3>
+      <table>
+<thead>
+<tr>
+    <th>Data</th>
+    <th>Categoria</th>
+    <th>Descrição</th>
+    <th>Valor</th>
+    <th>Status</th>
+</tr>
+</thead>
+        <tbody>
+          <tr class="empty-row">
+            <td colspan="4">Nenhuma transação encontrada</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <button class="fab">+</button>
+
+</section>
+
+<section id="view-historico" style="display:none;">
+  <div class="historico-container">
+
+    <div class="historico-header">
+      <h1>Histórico</h1>
+      <button class="btn-nova-transacao">+ Nova Transação</button>
+    </div>
+
+    <div class="historico-filtros">
+      <div class="filtro-grupo">
+        <label>Data início</label>
+        <input type="date" id="filtro-data-inicio">
+      </div>
+      <div class="filtro-grupo">
+        <label>Data fim</label>
+        <input type="date" id="filtro-data-fim">
+      </div>
+    </div>
+
+    <div class="historico-categorias">
+      <button class="historico-categoria-btn active" data-categoria="todos">Todos</button>
+      <button class="historico-categoria-btn" data-categoria="Despesas Fixas">Despesas Fixas</button>
+      <button class="historico-categoria-btn" data-categoria="Despesas Variáveis">Despesas Variáveis</button>
+      <button class="historico-categoria-btn" data-categoria="Transporte">Transporte</button>
+      <button class="historico-categoria-btn" data-categoria="Investimentos/Reservas">Investimentos/Reservas</button>
+      <button class="historico-categoria-btn" data-categoria="Apostas">Apostas</button>
+      <button class="historico-categoria-btn" data-categoria="Salário">Salário</button>
+      <button class="historico-categoria-btn" data-categoria="Freelance/Bico">Freelance/Bico</button>
+      <button class="historico-categoria-btn" data-categoria="Outro">Outro</button>
+    </div>
+
+    <div class="historico-lista" id="historico-lista"></div>
+
+  </div>
+</section>
+
+<section id="view-agenda" style="display:none;">
+</section>
+
+<section id="view-alertas" style="display:none;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+    <h2 style="font-size:26px; color:#333; font-weight:700;">Alertas</h2>
+    <button onclick="carregarAlertas()" title="Atualizar" style="background:none;border:none;cursor:pointer;color:#999;font-size:20px;">
+      <i class="fas fa-sync-alt"></i>
+    </button>
+  </div>
+
+  <div id="alerta-status-card" style="
+    background: linear-gradient(135deg, #e8f5e9, #f0faf4);
+    border: 1.5px solid #a5d6a7;
+    border-radius: 14px;
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+  ">
+    <div>
+      <div style="font-size:13px; color:#555; margin-bottom:4px;">Status Financeiro</div>
+      <div id="alerta-status-texto" style="font-size:22px; font-weight:800; color:#1b5e20; letter-spacing:1px;">—</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:13px; color:#555; margin-bottom:4px;">Saldo</div>
+      <div id="alerta-saldo-texto" style="font-size:20px; font-weight:700; color:#1b5e20;">—</div>
+    </div>
+  </div>
+
+  <div id="alertas-grupos"></div>
+
+  <div id="alertas-vazio" style="display:none; text-align:center; padding:60px 20px; color:#aaa;">
+    <i class="fas fa-check-circle" style="font-size:48px; color:#a5d6a7; margin-bottom:16px; display:block;"></i>
+    <div style="font-size:16px; font-weight:600; color:#555;">Tudo em dia!</div>
+    <div style="font-size:13px; margin-top:6px;">Nenhum alerta no momento.</div>
+  </div>
+</section>
+<section id="view-relatorio" style="display:none;">
+
+  <!-- Cabeçalho -->
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+    <h2 style="font-size:26px; color:#333; font-weight:700;">Relatório Financeiro</h2>
+    <button id="btn-exportar-pdf" style="
+      background:#279975; color:#fff; border:none; border-radius:10px;
+      padding:10px 20px; font-size:14px; font-weight:600; cursor:pointer;
+      display:flex; align-items:center; gap:8px;
+    ">
+      <i class="fas fa-file-pdf"></i> Exportar PDF
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div style="display:flex; gap:12px; margin-bottom:28px; flex-wrap:wrap;">
+    <select id="rel-periodo" style="padding:10px 14px; border-radius:10px; border:1px solid #ddd; font-size:14px; color:#333; background:#fff;">
+      <option value="mensal">Mensal</option>
+      <option value="anual">Anual</option>
+    </select>
+    <select id="rel-mes" style="padding:10px 14px; border-radius:10px; border:1px solid #ddd; font-size:14px; color:#333; background:#fff;">
+      <option value="1">Janeiro</option><option value="2">Fevereiro</option>
+      <option value="3">Março</option><option value="4">Abril</option>
+      <option value="5">Maio</option><option value="6">Junho</option>
+      <option value="7">Julho</option><option value="8">Agosto</option>
+      <option value="9">Setembro</option><option value="10">Outubro</option>
+      <option value="11">Novembro</option><option value="12">Dezembro</option>
+    </select>
+    <input id="rel-ano" type="number" value="2026" min="2020" max="2099"
+      style="padding:10px 14px; border-radius:10px; border:1px solid #ddd; font-size:14px; color:#333; width:100px;">
+    <button onclick="carregarRelatorio()" style="
+      background:#279975; color:#fff; border:none; border-radius:10px;
+      padding:10px 20px; font-size:14px; font-weight:600; cursor:pointer;
+    ">Gerar</button>
+  </div>
+
+  <!-- Conteúdo gerado dinamicamente -->
+  <div id="relatorio-conteudo"></div>
+
+</section>
+
+<section id="view-perfil" style="display:none;">
+
+  <div class="perfil-container">
+
+    <div class="perfil-card">
+
+      <div class="perfil-avatar">
+        LC
+      </div>
+
+      <h2 class="perfil-nome">
+        lc202321742
+      </h2>
+
+      <div class="perfil-info">
+
+        <div class="perfil-campo">
+          <label>E-mail</label>
+          <p>lc202321742@gmail.com</p>
+        </div>
+
+        <div class="perfil-campo">
+          <label>Telefone</label>
+          <p>(11) 98765-4321</p>
+        </div>
+
+      </div>
+
+      <button class="btn-editar-perfil">
+        Editar perfil
+      </button>
+
+      <button class="btn-alterar-senha">
+        Alterar senha
+      </button>
+
+      <button class="btn-sair">
+        Sair
+      </button>
+
+    </div>
+
+  </div>
+
+</section>
+
+  </div>
+  <!-- MODAL NOVA TRANSAÇÃO -->
+  <div id="modal-transacao" class="modal-overlay" style="display: none;">
+    <div class="modal-container">
+      <div class="modal-header">
+        <button class="modal-back" id="btn-fechar-modal">
+          <i class="fas fa-arrow-left"></i> Nova Transação
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- Toggle Receita / Despesa -->
+        <div class="tipo-toggle">
+          <button class="tipo-btn active" data-tipo="receita" id="btn-receita">Receita</button>
+          <button class="tipo-btn" data-tipo="despesa" id="btn-despesa">Despesa</button>
+        </div>
+
+        <!-- Valor -->
+        <div class="form-group">
+          <label class="form-label">Valor</label>
+          <div class="valor-input-wrapper">
+            <span class="valor-sinal">R$</span>
+            <input type="text" class="form-input valor-input" id="input-valor" placeholder="0,00" inputmode="decimal">
+          </div>
+        </div>
+
+        <!-- Data -->
+        <div class="form-group">
+          <label class="form-label">Data</label>
+          <input type="text" class="form-input" id="input-data" placeholder="dd/mm/aaaa">
+        </div>
+
+        <!-- Categoria -->
+        <label class="form-label" style="margin-bottom: 10px; display: block;">Categoria</label>
+        <div class="categoria-grid" id="grid-categoria">
+          <button class="categoria-btn" data-categoria="Despesas Fixas">Despesas Fixas</button>
+          <button class="categoria-btn" data-categoria="Despesas Variáveis">Despesas Variáveis</button>
+          <button class="categoria-btn" data-categoria="Transporte">Transporte</button>
+          <button class="categoria-btn" data-categoria="Investimentos/Reservas">Investimentos/Reservas</button>
+          <button class="categoria-btn" data-categoria="Apostas">Apostas</button>
+          <button class="categoria-btn" data-categoria="Outros">Outros</button>
+        </div>
+        <div class="form-group">
+    <label class="form-label">Subcategoria</label>
+
+    <select class="form-select" id="select-subcategoria">
+        <option value="">Selecione...</option>
+    </select>
+</div>
+
+<div class="form-group">
+    <input
+        type="text"
+        class="form-input"
+        id="input-subcategoria-personalizada"
+        placeholder="Ou digite uma subcategoria personalizada">
+</div>
+
+        <!-- Descrição -->
+        <div class="form-group">
+          <label class="form-label">Descrição (opcional)</label>
+          <textarea class="form-textarea" id="input-descricao" placeholder="Adicione detalhes sobre esta transação..."></textarea>
+        </div>
+
+<!-- Lembrete único na Agenda (não recorrente) -->
+        <div class="recorrente-toggle">
+          <span>Adicionar à Agenda como lembrete único?</span>
+          <label class="switch">
+            <input type="checkbox" id="toggle-agenda">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div id="agenda-detalhes" class="recorrente-detalhes" style="display: none;">
+          <div class="form-group">
+            <label class="form-label">Data de vencimento</label>
+            <input type="text" class="form-input" id="input-vencimento-agenda" placeholder="dd/mm/aaaa">
+          </div>
+          <div class="recorrente-badge">
+            <i class="fas fa-check-circle"></i>
+            Será adicionada à Agenda automaticamente
+          </div>
+        </div>
+
+        <!-- Despesa Recorrente -->
+        <div class="recorrente-toggle">
+          <span>É uma transação recorrente?</span>
+          <label class="switch">
+            <input type="checkbox" id="toggle-recorrente">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- Mini-janela Recorrente -->
+        <div id="recorrente-detalhes" class="recorrente-detalhes" style="display: none;">
+          <div class="form-group">
+            <label class="form-label">Frequência</label>
+            <select class="form-select" id="select-frequencia">
+
+    <option value="Mensal">
+        Mensal
+    </option>
+
+    <option value="Quinzenal">
+        Quinzenal
+    </option>
+
+    <option value="Semanal">
+        Semanal
+    </option>
+
+    <option value="Anual">
+        Anual
+    </option>
+
+</select>
+          </div>
+          <div class="recorrente-badge">
+            <i class="fas fa-check-circle"></i>
+            Será adicionada à Agenda automaticamente
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-salvar" id="btn-salvar">Salvar transação</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CONFIRMAÇÃO -->
+  <div id="modal-confirmacao" class="modal-overlay" style="display:none;">
+      <div class="modal-box">
+          <h3 id="confirmacao-titulo">Confirmar</h3>
+          <p id="confirmacao-mensagem"></p>
+
+          <div class="modal-actions">
+              <button id="btn-cancelar-confirmacao" class="btn-cancelar">
+                  Cancelar
+              </button>
+
+              <button id="btn-confirmar" class="btn-confirmar">
+                  Confirmar
+              </button>
+          </div>
+      </div>
+  </div>
+
+  <!-- MODAL EDIÇÃO -->
+  <div id="modal-edicao" class="modal-overlay" style="display:none;">
+
+      <div class="modal-container">
+
+          <div class="modal-body">
+
+              <div class="modal-topo">
+
+                  <h2>Editar Transação</h2>
+
+                  <button
+                      id="btn-fechar-edicao-x"
+                      class="btn-fechar-modal">
+                      ×
+                  </button>
+
+              </div>
+
+              <div class="form-group">
+                  <label class="form-label">
+                      Descrição
+                  </label>
+
+                  <input
+                      type="text"
+                      id="edit-descricao"
+                      class="form-input">
+              </div>
+
+              <div class="form-group">
+                  <label class="form-label">
+                      Valor
+                  </label>
+
+                  <input
+                      type="text"
+                      id="edit-valor"
+                      class="form-input">
+              </div>
+
+              <div class="form-group">
+                  <label class="form-label">
+                      Data
+                  </label>
+
+                  <input
+                      type="date"
+                      id="edit-data"
+                      class="form-input">
+              </div>
+
+              <div class="modal-actions">
+
+                  <button
+                      id="btn-fechar-edicao"
+                      class="btn-cancelar">
+                      Cancelar
+                  </button>
+
+                  <button
+                      id="btn-salvar-edicao"
+                      class="btn-salvar-edicao">
+                      Salvar
+                  </button>
+
+              </div>
+
+          </div>
+
+      </div>
+
+  </div>
+
+  <script>
+    document.getElementById('current-date').textContent = new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  </script>
+  <script src="script-dashboard.js"></script>
+</body>
+</html>
